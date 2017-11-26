@@ -8,6 +8,7 @@ using namespace Functions;
 QString rootPath;
 QString dataPath;
 Api* api;
+MailSender* mail;
 Ratelimit* ratelimit;
 bool useSsl;
 QSslKey privateKey;
@@ -62,6 +63,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    mail = new MailSender;
     ratelimit = new Ratelimit;
     api = new Api;
     good("API Initialized");

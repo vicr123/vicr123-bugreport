@@ -3,6 +3,7 @@
 using namespace Functions;
 extern Ratelimit* ratelimit;
 extern bool useSsl;
+extern MailSender* mail;
 
 Api::Api(QObject *parent) : QObject(parent)
 {
@@ -333,7 +334,9 @@ Response Api::processPath(Request req) {
                         rsp.statusCode = 404;
                         return rsp;
                     }
-                    ASSERT_PRIVATE_BUG_ALLOW_READ(currentUser, isAdmin)
+                    ASSERT_PRIVATE_BUG_ALLOW_READ(currentUser, isAdmin);
+
+                    QString bugAuthor = q.value("author").toString();
 
                     if (subObject == "comments") {
                         //Check User
@@ -346,16 +349,19 @@ Response Api::processPath(Request req) {
                         //Append to comments
                         QJsonArray coms = comments(tableId, bugID);
                         QString author = q.value("id").toString();
+                        QString userEmail = q.value("email").toString();
+                        QString authorName = q.value("username").toString();
 
                         QJsonDocument doc = QJsonDocument::fromJson(req.body);
                         QJsonObject obj = doc.object();
+                        QString body = obj.value("body").toString();
 
-                        if (obj.value("body").toString() == "") {
+                        if (body == "") {
                             rsp.statusCode = 400;
                             return rsp;
                         }
 
-                        if (obj.value("body").toString().length() > 10000) {
+                        if (body.length() > 10000) {
                             //Exceeded body limit
                             rsp.statusCode = 400;
                             rsp.contents = "Body greater than 10000 characters";
@@ -363,7 +369,7 @@ Response Api::processPath(Request req) {
                         }
 
                         q.prepare("INSERT INTO \"comments\" (text, author) VALUES (:TEXT, :AUTHOR) RETURNING *");
-                        q.bindValue(":TEXT", obj.value("body").toString());
+                        q.bindValue(":TEXT", body);
                         q.bindValue(":AUTHOR", author);
                         q.exec();
 
@@ -373,26 +379,77 @@ Response Api::processPath(Request req) {
                             return rsp;
                         }
 
+                        QString timestamp = q.value("timestamp").toString();
+
+                        QMap<QString, QString> emails;
+
                         QString id = q.value("id").toString();
                         QStringList commentIds;
                         for (QJsonValue v : coms) {
-                            commentIds.append(v.toObject().value("id").toString());
+                            QJsonObject object = v.toObject();
+                            commentIds.append(object.value("id").toString());
+
+                            q.prepare("SELECT * FROM \"users\" WHERE \"id\"=:ID");
+                            q.bindValue(":ID", object.value("author").toString());
+                            q.exec();
+
+                            if (q.next()) {
+                                QString email = q.value("email").toString();
+                                if (!emails.contains(email) && email != userEmail && q.value("verified").toBool()) {
+                                    emails.insert(email, q.value("username").toString());
+                                }
+                            }
                         }
                         commentIds.append(id);
 
                         setComments(tableId, bugID, commentIds);
 
+                        q.prepare("SELECT * FROM \"users\" WHERE \"id\"=:ID");
+                        q.bindValue(":ID", bugAuthor);
+                        q.exec();
+
+                        if (q.next()) {
+                            QString email = q.value("email").toString();
+                            if (!emails.contains(email) && email != userEmail && q.value("verified").toBool()) {
+                                emails.insert(email, q.value("username").toString());
+                            }
+                        }
+
+                        //Get Table Name
+                        QSqlQuery q;
+                        q.prepare("SELECT * FROM \"projects\" WHERE id=:ID");
+                        q.bindValue(":ID", tableId);
+                        q.exec();
+
+                        if (q.next()) {
+                            //Send an email about new comments
+                            //Get all users email should send to
+
+                            QList<MailMessage> messages;
+                            for (QString email : emails.keys()) {
+                                MailMessage msg("commentAdded", QStringList() << emails.value(email) << "#" + bugID << q.value("name").toString() << authorName << obj.value("body").toString());
+                                msg.subject = "New comment on bug #" + bugID + " in project " + q.value("name").toString();
+
+                                QMap<QString, QString> to;
+                                to.insert(email, emails.value(email));
+                                msg.to = to;
+                                messages.append(msg);
+                            }
+
+                            mail->send(messages);
+                        }
+
                         {
                             QJsonObject obj;
-                            obj.insert("body", q.value("text").toString());
-                            obj.insert("timestamp", q.value("timestamp").toString());
+                            obj.insert("body", body);
+                            obj.insert("timestamp", timestamp);
                             obj.insert("id", id);
-                            obj.insert("author", q.value("author").toString());
+                            obj.insert("author", author);
                             obj.insert("system", false);
 
                             QJsonDocument doc(obj);
 
-                            for (SocketApi* socket : listeningSockets(tableId, bugID, q.value("author").toInt())) {
+                            for (SocketApi* socket : listeningSockets(tableId, bugID, author.toInt())) {
                                 socket->sendTextFrame("COMMENT NEW " + doc.toJson());
                             }
 
@@ -716,8 +773,27 @@ Response Api::processPath(Request req) {
                 return rsp;
             }
 
+            //Success! Compose an email welcoming them
+            QString activationToken = getRandomAlphanumericString(128);
+            QString activationUrl = QUrl("http://" + settings.value("www/host").toString() + "/api/activate?token=" + activationToken).toEncoded();
+            MailMessage msg("welcome", QStringList() << username << activationUrl);
+            msg.subject = "Welcome to the vicr123 Bug Reporting System!";
+
+            QMap<QString, QString> to;
+            to.insert(email, username);
+            msg.to = to;
+
+            mail->send(msg);
+
+            q.prepare("INSERT INTO \"activations\" (\"user\", token) VALUES (:USER, :TOKEN)");
+            q.bindValue(":USER", id);
+            q.bindValue(":TOKEN", activationToken);
+            if (!q.exec()) {
+                SQL_CHECK;
+                warn("Couldn't insert into table \"activations\". User " + QString::number(id) + " won't be able to activate.");
+            }
+
             {
-                //Success!
                 QJsonObject obj;
                 obj.insert("token", token);
                 obj.insert("username", username);
@@ -1098,6 +1174,45 @@ Response Api::processPath(Request req) {
         } else if (req.path == "/api/files/upload") { //Upload a file
 
             rsp.statusCode = 500;
+            return rsp;
+        } else if (req.path.startsWith("/api/activate")) {
+            QString query = req.path.mid(req.path.indexOf("?") + 1);
+            QStringList queries = query.split("&");
+            for (QString query : queries) {
+                if (query.startsWith("token=")) {
+                    QString token = query.mid(query.indexOf("=") + 1);
+                    //Get user to activate
+
+                    QSqlQuery q;
+                    q.prepare("SELECT * FROM \"activations\" WHERE token=:TOKEN");
+                    q.bindValue(":TOKEN", token);
+                    q.exec();
+
+                    if (!q.next()) {
+                        rsp.statusCode = 400;
+                        return rsp;
+                    }
+
+                    QString userId = q.value("user").toString();
+                    q.prepare("UPDATE \"users\" SET verified=true WHERE id=:USER");
+                    q.bindValue(":USER", userId);
+                    if (!q.exec()) {
+                        rsp.statusCode = 500;
+                        return rsp;
+                    }
+
+                    q.prepare("DELETE FROM \"activations\" WHERE token=:TOKEN");
+                    q.bindValue(":TOKEN", token);
+                    q.exec();
+
+                    rsp.statusCode = 303;
+                    rsp.headers.insert("Location", "/app/index.html?validated=true");
+                    rsp.allowEmptyContents = true;
+                    return rsp;
+                }
+            }
+
+            rsp.statusCode = 400;
             return rsp;
         } else { //Not implemented
             rsp.statusCode = 404;

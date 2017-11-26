@@ -22,7 +22,8 @@ SOURCES += main.cpp \
     connection.cpp \
     api/api.cpp \
     api/ratelimit.cpp \
-    api/socketapi.cpp
+    api/socketapi.cpp \
+    mail/mailsender.cpp
 
 HEADERS += \
     functions.h \
@@ -30,4 +31,5 @@ HEADERS += \
     connection.h \
     api/api.h \
     api/ratelimit.h \
-    api/socketapi.h
+    api/socketapi.h \
+    mail/mailsender.h

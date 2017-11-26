@@ -1,6 +1,5 @@
 #include "connection.h"
 
-
 using namespace Functions;
 extern QString rootPath;
 extern Api* api;
@@ -9,9 +8,6 @@ Connection::Connection(QObject *parent) : QSslSocket(parent)
 {
     req.connection = this;
     connect(this, SIGNAL(disconnected()), this, SLOT(deleteLater()));
-    connect(this, &Connection::destroyed, [=] {
-        // log("Connection is being destroyed.");
-    });
 }
 
 void Connection::dataAvailable() {
@@ -217,6 +213,23 @@ void Request::processCompletedRequest() {
         isHead = true;
     }
 
+    QSettings settings;
+    if (settings.value("ssl/forceSsl", false).toBool() && !connection->isEncrypted()) {
+        //Redirect to HTTPS
+        Response rsp;
+        rsp.statusCode = 301;
+
+        QString redirectLocation = "https://" + settings.value("www/host").toString();
+        if (settings.value("ssl/sslConnectionPort", 443).toInt() != 443) {
+            redirectLocation += ":" + QString::number(settings.value("ssl/sslConnectionPort", 443).toInt());
+        }
+        redirectLocation += path;
+        rsp.headers.insert("Location", redirectLocation);
+
+        rsp.WriteToConnection(connection, path);
+        return;
+    }
+
     if (path.startsWith("/api/")) {
         Response rsp = api->processPath(*this);
 
@@ -263,6 +276,10 @@ void Request::processCompletedRequest() {
         rdr.WriteToConnection(connection, path);
         return;
     } else {
+        if (path.contains('?')) {
+            path = path.left(path.indexOf("?"));
+        }
+
         QFile file(rootPath + path);
         if (!file.exists()) {
             Response err;

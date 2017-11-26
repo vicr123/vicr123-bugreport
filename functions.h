@@ -15,6 +15,7 @@ namespace Functions {
 
     QString getHTTPStatusCode(int code);
     QString getRandomString(int length);
+    QString getRandomAlphanumericString(int length);
 }
 
 #endif // FUNCTIONS_H
