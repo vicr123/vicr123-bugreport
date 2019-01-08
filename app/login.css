@@ -1,0 +1,20 @@
+body {
+    padding: 9px;
+}
+
+div.screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    height: 100%;
+}
+
+div.screen * {
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+
+div.screen#terms {
+    overflow-y: auto;
+}

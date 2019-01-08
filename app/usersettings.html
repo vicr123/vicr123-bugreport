@@ -1,0 +1,39 @@
+<html>
+    <head>
+        <title>vicr123 Bug Reporting</title>
+        <link rel="stylesheet" href="/contemporary.css" />
+        <link rel="stylesheet" href="app.css" />
+        <link rel="stylesheet" href="login.css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script>if (window.module) module = window.module;</script>
+        <script src="/contemporary.js"></script>
+        <script src="usersettings.js"></script>
+    </head>
+    <body style="margin: 0px;">
+        <div class="screen settingsChange" id="settingsChange">
+            <h1>Profile and Account</h1>
+            <p>Change user settings</p>
+            <input type="text" placeholder="Username" id="username" spellcheck="false" autocomplete="off"/>
+            <input type="password" placeholder="Password" id="password"/>
+            <input type="password" placeholder="Confirm Password" id="passwordConfirm"/>
+            <span>To set a profile picture, use <a href="https://en.gravatar.com" target="_blank">Gravatar</a>.</span>
+            <span class="error" id="passwordError">The passwords don't match.</span>
+
+            <div class="spacer"></div>
+            <p>Just to make sure this is you, go ahead and enter your password below.</p>
+            <input type="password" placeholder="Current Password" id="currentPassword"/>
+            <span class="error" id="error">That didn't work. Check your password and enter it again.</span>
+
+            <div class="buttonBar">
+                <span class="spacer"></span>
+                <a href="#" class="button" onclick="resetView()">Cancel</a>
+                <a href="#" class="button" onclick="changeSettings()">Save</a>
+            </div>
+        </div>
+        <div class="coverLoader" id="coverLoader">
+            <div class="loader"></div>
+        </div>
+    </body>
+</html>

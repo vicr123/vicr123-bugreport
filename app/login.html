@@ -1,0 +1,80 @@
+<html>
+    <head>
+        <title>vicr123 Bug Reporting</title>
+        <link rel="stylesheet" href="/contemporary.css" />
+        <link rel="stylesheet" href="app.css" />
+        <link rel="stylesheet" href="login.css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script>if (window.module) module = window.module;</script>
+        <script src="/contemporary.js"></script>
+        <script src="login.js"></script>
+        <script src="https://apis.google.com/js/platform.js?onload=renderGoogleButton" async defer></script>
+        <meta name="google-signin-client_id" content="158535901355-9ll1t1el59v9kav3m2448n4b3dk1d1ij.apps.googleusercontent.com">
+    </head>
+    <body style="margin: 0px;">
+        <div class="screen login" id="login">
+            <h1>Log In</h1>
+            <p>Log in to the bugtracker using your username and password.</p>
+            <input type="text" placeholder="Username" id="username" spellcheck="false" autocomplete="off"/>
+            <input type="password" placeholder="Password" id="password"/>
+            <span class="error" id="error">That didn't work. Check your email and password and enter it again.</span>
+            <div class="spacer"></div>
+
+            <div class="buttonBar">
+                <a href="#" class="button" onclick="register()">Register for an account</a>
+                <span class="spacer"></span>
+                <!--<div class="g-signin2" data-onsuccess="onSignIn"></div>-->
+                <span class="spacer"></span>
+                <a href="#" class="button" onclick="resetView()">Cancel</a>
+                <a href="#" class="button" onclick="attemptLogin()">Log In</a>
+            </div>
+        </div>
+        <div class="screen 2fa" id="2fa">
+            <h1>Two Factor Authentication</h1>
+            <p>Obtain a verification code to verify your identity by opening the Two Factor Authentication app on your phone.</p>
+            <input type="tel" pattern="[0-9 ]*" placeholder="Two Factor Authentication Code" id="totpCode"/>
+            <span class="error" id="totpError">That didn't work. Check your code and enter it again.</span>
+            <div class="spacer"></div>
+
+            <div class="buttonBar">
+                <span class="spacer"></span>
+                <a href="#" class="button" onclick="resetView()">Cancel</a>
+                <a href="#" class="button" onclick="attemptTotpLogin()">Log In</a>
+            </div>
+        </div>
+        <div class="screen register" id="register">
+            <h1>Register for an account</h1>
+            <p>Register to make comments and report on bugs.</p>
+            <input type="email" type="email" placeholder="Email" id="regemail" spellcheck="false" autocomplete="off"/>
+            <input type="text" placeholder="Username" id="regusername" spellcheck="false" autocomplete="off"/>
+            <input type="password" placeholder="Password" id="regpassword"/>
+            <input type="password" placeholder="Confirm Password" id="regpasswordconfirm"/>
+            <div><input type="checkbox" id="terms"/><label for="terms" class="checkbox"><span>I agree to the <a href="#" onclick="openTerms();">Terms and Conditions</a></span></label></div>
+            <span class="error" id="regTerms">You'll need to agree to the terms and conditions.</span>
+            <span class="error" id="regPasswordError">These passwords don't match.</span>
+            <span class="error" id="regFieldError">All fields are required.</span>
+            <span class="error" id="regUsernameError">The username is already used.</span>
+            <span class="error" id="regEmailError">The email is already used.</span>
+            <span class="error" id="regEmailValidityError">The email address is invalid.</span>
+            <span class="error" id="regServerError">Server Error.</span>
+            <div class="spacer"></div>
+            
+            <div class="buttonBar">
+                <span class="spacer"></span>
+                <a href="#" class="button" onclick="resetView()">Cancel</a>
+                <a href="#" class="button" onclick="attemptRegister()">Register</a>
+            </div>
+        </div>
+        <div class="screen" id="terms">
+            <div id="termsBox"></div>
+            <div class="buttonBar terms">
+                <a href="#" class="button" onclick="$('#terms').hide();$('#register').show();">Done</a>
+            </div>
+        </div>
+        <div class="coverLoader" id="coverLoader">
+            <div class="loader"></div>
+        </div>
+    </body>
+</html>

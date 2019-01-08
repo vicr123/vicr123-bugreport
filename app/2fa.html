@@ -1,0 +1,99 @@
+<html>
+    <head>
+        <title>vicr123 Bug Reporting</title>
+        <link rel="stylesheet" href="/contemporary.css" />
+        <link rel="stylesheet" href="app.css" />
+        <link rel="stylesheet" href="2fa.css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="/jquery.qrcode.min.js"></script>
+        <script src="/unibabel.index.js"></script>
+        <script src="/unibabel.base32.js"></script>
+        <script>if (window.module) module = window.module;</script>
+        <script src="/contemporary.js"></script>
+        <script src="2fa.js"></script>
+    </head>
+    <body style="margin: 0px;">
+        <div class="screen password" id="pwd">
+            <h1>Two Factor Authentication</h1>
+            <p>When Two Factor Authentication is enabled, to log in you'll need to provide both your password and a special one time use code that's generated on your phone.</p>
+            <p>To get started, enter your password below to confirm that it's you.</p>
+            <input type="password" placeholder="Password" id="password"/>
+            <span class="error" id="error">That didn't work. Check your email and password and enter it again.</span>
+            <div class="spacer"></div>
+
+            <div class="buttonBar">
+                <span class="spacer"></span>
+                <a href="#" class="button" onclick="resetView()">Cancel</a>
+                <a href="#" class="button" onclick="prepare2faInfo()">Next</a>
+            </div>
+        </div>
+        <div class="screen key" id="key">
+            <h1>Two Factor Authentication</h1>
+            <div class="panes">
+                <div>
+                    <p>Grab your phone and download an authentication app from your phone's respective app store. Some apps you can use are</p>
+                    <ul>
+                        <li>Authy</li>
+                        <li>Lastpass Authenticator</li>
+                        <li>Google Authenticator</li>
+                        <li>Microsoft Authenticator</li>
+                    </ul>
+                </div>
+                <div>
+                    <p>Scan this code</p>
+                    <div id="qrwrapper">
+                        <div id="qrcode"></div>
+                    </div>
+                    <div>Not working? Enter this code instead</div>
+                    <pre id="qrcode-code"></pre>
+                    </div>
+                <div>
+                    <div>Once that's done, enter the 6 digit code provided by the app.</div>
+                    <input type="tel" pattern="[0-9 ]*"  id="codeInput"/><br />
+                    <span class="error" id="codeError">That's not right. Check the code.</span>
+                </div>
+            </div>
+            
+            <div class="buttonBar">
+                <span class="spacer"></span>
+                <a href="#" class="button" onclick="resetView()">Cancel</a>
+                <a href="#" class="button" onclick="attemptEnable2FA()">Enable 2FA</a>
+            </div>
+        </div>
+        <div class="screen done" id="done">
+            <h1>Two Factor Authentication</h1>
+            <p>Two Factor Authentication has been enabled for this account. From now on, when you log in, you'll need to enter both a password and a verification code.</p>
+            <span class="spacer"></span>
+            <div class="buttonBar">
+                <span class="spacer"></span>
+                <a href="#" class="button" onclick="resetView()">OK</a>
+            </div>
+        </div>
+        <div class="screen management" id="management">
+            <h1>Two Factor Authentication</h1>
+            <p>Recovery codes are coming soon.</p>
+            <span class="spacer"></span>
+            <div class="buttonBar" style="margin-top: 6px;">
+                <a href="#" class="button destructive" onclick="$('#management').hide(); $('#disable').show();">Disable Two Factor Authentication</a>
+                <span class="spacer"></span>
+                <a href="#" class="button" onclick="resetView()">Done</a>
+            </div>
+        </div>
+        <div class="screen disable" id="disable">
+            <h1>Two Factor Authentication</h1>
+            <p>When you turn off Two Step Authentication, you will no longer be asked for verification codes when you log into your account.</p>
+            <p>Are you sure you want to disable Two Factor Authentication?</p>
+            <span class="spacer"></span>
+            <div class="buttonBar" style="margin-top: 6px;">
+                <span class="spacer"></span>
+                <a href="#" class="button" onclick="$('#management').show(); $('#disable').hide();">Cancel</a>
+                <a href="#" class="button destructive" onclick="attemptDisable2FA()">Disable Two Factor Authentication</a>
+            </div>
+        </div>
+        <div class="coverLoader" id="coverLoader">
+            <div class="loader"></div>
+        </div>
+    </body>
+</html>

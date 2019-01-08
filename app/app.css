@@ -1,0 +1,839 @@
+@keyframes fade-out {
+    from {
+        opacity: 1;
+    }
+    
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes toast-in {
+    from {
+        bottom: -50px;
+    }
+
+    to {
+        bottom: 0px;
+    }
+}
+
+
+@keyframes toast-out {
+    from {
+        bottom: 0px;
+    }
+
+    to {
+        bottom: -50px;
+    }
+}
+
+:root {
+    --accent-color: rgb(0, 80, 170);
+    --accent-hover: rgb(20, 60, 105);
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--accent-color);
+}
+
+body {
+    margin: 0px;
+    margin-top: 48px;
+
+    cursor: default;
+    user-select: none;
+    overflow: hidden;
+}
+
+div.landing {
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    top: 0px;
+    position: fixed;
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 4000;
+    background: var(--bg-color);
+}
+
+div.landing.hide {
+    animation: fade-out 0.5s cubic-bezier(0, 0, 0, 1) forwards;
+}
+
+div.landing.hidden {
+    display: none;
+}
+
+div.loader {
+    background-image: url("/images/loader.svg");
+    width: 48px;
+    height: 48px;
+    background-repeat: no-repeat;
+    background-size: cover;
+    
+    animation: spin 1s linear infinite;
+}
+
+div.loader.hidden {
+    display: none;
+}
+
+div#headerloader {
+    width: 16px;
+    height: 16px;
+
+    animation: spin 1s linear infinite;
+}
+
+div.toast {
+    border-top: 1px solid var(--fg-color);
+    height: 49px;
+    width: calc(100% - 12px);
+    bottom: -50px;
+    position: fixed;
+    
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    padding-left: 6px;
+    padding-right: 6px;
+
+    background: var(--bg-color);
+
+    transition: bottom 0.5s cubic-bezier(0, 0, 0, 1);
+    z-index: 9999;
+}
+
+div.toast.show {
+    bottom: 0px;
+}
+
+div.toast * {
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+div.toast #toast-header {
+    font-weight: bold;
+}
+
+div.toast #toast-contents {
+    flex-grow: 1;
+}
+
+div.content {
+    /*height: calc(100vh - 48px);*/
+    height: 100%;
+    border: none;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: 0px;
+    margin: 0px;
+}
+
+div.content * {
+    padding-bottom: 0px;
+    padding-top: 0px;
+    margin: 0px;
+    vertical-align: bottom;
+}
+
+div.list {
+    border-right: 1px solid var(--fg-color);
+    width: 300px;
+    min-width: 300px;
+    overflow-y: auto;
+}
+
+div.parentButton, div.list div:not(.coverLoader):not(.parentButton) {
+    padding: 6px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+div.parentButton {
+    border-bottom: 1px solid var(--fg-color);
+    position: sticky;
+    top: 0px;
+    background: var(--bg-color);
+}
+
+div.list div img, .parentButton img {
+    padding-right: 9px;
+}
+
+div.list div:not(.coverLoader):not(.loader):hover, .parentButton:hover {
+    background: var(--accent-hover);
+}
+
+div.list div.selected:not(.coverLoader):not(.loader), .parentButton:active {
+    background: var(--accent-color);
+    color: var(--fg-color);
+}
+
+div.list div span.listId {
+    color: gray;
+    font-size: 8pt;
+    vertical-align: baseline;
+}
+
+div.list div.selected span.listId {
+    color: var(--fg-color);
+}
+
+div.list .closed {
+    color: gray;
+}
+
+div.list span.aux {
+    flex-grow: 1;
+    text-align: right;
+    min-width: max-content;
+}
+
+div.list span.aux img {
+    padding-left: 1px;
+    padding-right: 1px;
+    margin: 0px;
+}
+
+div.list span.aux img:first-child {
+    padding-left: 6px;
+}
+
+div.list span.aux img:last-child {
+    padding-right: 0px;
+}
+
+div.cxMenu {
+    background: var(--bg-color);
+    border: 1px solid var(--fg-color);
+
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    z-index: 10000;
+    height: min-content;
+    width: max-content;
+
+    display: none;
+    flex-direction: column;
+}
+
+div.cxMenu.show {
+    display: flex;
+}
+
+div.cxMenu .menuHeader {
+    padding: 5px;
+    background: var(--fg-color);
+    color: var(--bg-color);
+    text-align: center;
+}
+
+div.cxMenu .menuItem {
+    padding: 5px;
+}
+
+div.cxMenu .menuItem:hover {
+    background: var(--accent-color);
+}
+
+div.cxMenu .menuSeperator {
+    background: var(--fg-color);
+    height: 1px;
+}
+
+div.panel {
+    padding: 9px;
+    user-select: text;
+    overflow-y: auto;
+}
+
+div.panel#bugInfo {
+    flex-grow: 1;
+    padding: 0px;
+}
+
+div#bugContents {
+    padding: 9px;
+}
+
+div.bugContents table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+div.bugContents td {
+    border: 1px solid var(--fg-color);
+    padding: 3px;
+}
+
+div.bugContents th {
+    border: 1px solid var(--fg-color);
+    background-color: var(--fg-color);
+    color: var(--bg-color);
+    padding: 3px;
+}
+
+div#bugCover {
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: calc(100% - 18px);
+    background: var(--bg-color);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+}
+
+div#bugCover * {
+    padding: 9px;
+}
+
+#bugInfo.details div#bugCover {
+    display: none;
+}
+
+#bugInfo div#bugContents {
+    display: none;
+}
+
+#bugInfo.details div#bugContents {
+    display: block;
+    overflow: hidden;
+}
+
+div.newBug {
+    position: fixed;
+    height: calc(100vh - 65px);
+    bottom: 0px;
+    width: calc(100% - 319px);
+    left: 100%;
+    border: none;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: 9px;
+    margin: 0px;
+    background: var(--bg-color);
+    border-left: 1px solid var(--fg-color);
+    transition: left 0.5s cubic-bezier(0, 0, 0, 1), width 0.5s cubic-bezier(0, 0, 0, 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    overflow-y: auto;
+}
+
+div.newBug.show {
+    position: fixed;
+    left: 300px;
+}
+
+div.newBug * {
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+
+#dlgLogin, #dlg2fa, #dlgProfileSettings {
+    margin: 0px;
+    padding: 0px;
+}
+
+#dlgLogin iframe, #dlg2fa iframe, #dlgProfileSettings iframe {
+    border: none;
+    color: var(--fg-color);
+    width: 100%;
+    height: 250px;
+    margin: 0px;
+    padding: 0px;
+}
+
+#dlg2fa iframe {
+    height: 300px;
+}
+
+#dlgProfileSettings iframe {
+    height: 275px;
+}
+
+#dlgEditWrapper {
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+#dlgEdit p {
+    margin-top: 0px;
+}
+
+div#bugContents * {
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+
+div.bugBody {
+    border: 1px solid var(--fg-color);
+    padding: 9px;
+    overflow-x: auto;
+}
+
+div.bugBody.hide {
+    display: none;
+}
+
+div.bugBody.disabled {
+    border: 1px solid var(--fg-disabled);
+    color: var(--fg-disabled);
+}
+
+div.bugBody.error {
+    border: 1px solid #ff3232;
+    color: #ff3232;
+}
+
+div.bugBody.error div {
+    color: #ff3232;
+}
+
+div.bugBody blockquote {
+    padding: 5px;
+    padding-left: 10px;
+    border-left: 3px solid rgb(0, 150, 255);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+div.bugBody blockquote blockquote {
+    border-color: rgb(0, 150, 0);
+}
+
+div.bugBody blockquote blockquote blockquote {
+    border-color: rgb(150, 0, 0);
+}
+
+div.bugBody blockquote blockquote blockquote blockquote {
+    border-color: rgb(255, 150, 0);
+}
+
+div.bugBody blockquote blockquote blockquote blockquote blockquote {
+    border-color: rgb(0, 175, 255);
+}
+
+div.bugBody blockquote blockquote blockquote blockquote blockquote blockquote {
+    border-color: rgb(0, 175, 0);
+}
+
+div.bugBody blockquote span.author {
+    font-size: 8pt;
+}
+
+div.bugBodyMetadata {
+    color: var(--fg-disabled);
+    font-size: 10pt;
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+
+div.bugBodyMetadata * {
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+div#bugMetadata table {
+    border: none;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+div#bugMetadata table * {
+    vertical-align: middle;
+}
+
+div#bugMetadata table td {
+    margin: 0px;
+    padding: 5px;
+}
+
+div#bugMetadata table th {
+    width: 100px;
+    text-align: left;
+}
+
+#bugOpen.bugOpen {
+    color: white;
+    background: rgb(0, 150, 0);
+}
+
+#bugOpen.bugOpen:after {
+    content: "OPEN";
+}
+
+#bugOpen.bugClosed {
+    color: white;
+    background: rgb(150, 0, 0);
+}
+
+#bugOpen.bugClosed:after {
+    content: "CLOSED";
+}
+
+div.bugSystem {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 6px;
+}
+
+div.bugSystem img {
+    padding-right: 6px;
+}
+
+div.parentButton, div.list .parentButton {
+    display: none;
+}
+
+div.headerButtons {
+    display: none;
+}
+
+div.headerButtons.show {
+    display: flex;
+}
+
+.admin {
+    display: none;
+}
+
+body.adminMode .admin {
+    display: flex;
+}
+
+#bugComments {/* height: -webkit-fill-available; */}
+
+#commentsBox {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+}
+
+#commentText {
+    /* max-height: 200px; */
+    padding: 9px;
+    transition: height 0.5s ease-out;
+}
+
+div.bugTop {
+    /* position: sticky; */
+    /* top: 0px; */
+    background: var(--bg-color);
+}
+
+img.commentSendButton {
+    width: 24px;
+    height: 24px;
+    padding: 8px;
+}
+
+img.shield {
+    margin: 0px;
+    position: relative;
+    height: 12px;
+    left: 28px;
+    top: 6px;
+}
+
+div#bugActions {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    height: 32px;
+    /* margin-top: -7px; */
+}
+
+a.commentButton {
+    display: none;
+}
+
+div.dropTarget {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    background: var(--bg-color);
+
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+div.dropTarget.show {
+    display: flex;
+}
+
+div.uploads {
+    display: flex;
+    flex-direction: column;
+}
+
+a.button.list {
+    justify-content: space-between;
+    min-height: max-content;
+}
+
+a.button.list:after {
+    content: url("/images/arrow-right.svg");
+    float: right;
+}
+
+textarea#newBugContent {
+    min-height: 300px;
+}
+
+@keyframes indeterminateProgressBarAnimation {
+    0% {
+        background: var(--bg-color);
+    }
+
+    50% {
+        background: var(--bg-color);
+    }
+
+    51% {
+        background: rgb(0, 200, 0);
+    }
+
+    100% {
+        background: rgb(0, 200, 0);
+    }
+}
+
+@keyframes indeterminateProgressBarTrackAnimation {
+    0% {
+        background: rgb(0, 200, 0);
+        left: 0%;
+        width: 0%;
+    }
+
+    25% {
+        left: 100%;
+        width: 100%;
+    }
+
+    26% {
+        left: 0%;
+        width: 0%;
+    }
+
+    50% {
+        background: rgb(0, 200, 0);
+        left: 0%;
+        width: 100%;
+    }
+    
+    51% {
+        background: var(--bg-color);
+        left: 0%;
+        width: 0%;
+    }
+
+    75% {
+        left: 100%;
+        width: 100%;
+    }
+
+    76% {
+        left: 0%;
+        width: 0%;
+    }
+
+    100% {
+        background: var(--bg-color);
+        left: 0%;
+        width: 100%;
+    }
+}
+
+div.uploads {
+    max-height: 200px;
+    overflow-y: scroll;
+}
+
+div.uploadObject {
+    display: flex;
+    flex-shrink: 0;
+    flex-direction: row;
+    align-items: center;
+}
+
+span.uploadText {
+    padding-left: 6px;
+    color: var(--fg-disabled);
+}
+
+div.progressBar {
+    flex-grow: 1;
+    height: 12px;
+    padding: 0px;
+    overflow: hidden;
+    margin-left: 6px;
+    border: 1px solid var(--fg-color);
+}
+
+div.progressBarTrack {
+    background: rgb(0, 200, 0);
+
+    top: 0px;
+    height: 100%;
+    margin: 0px;
+    position: relative;
+}
+
+div.progressBar.indeterminate {
+    animation: indeterminateProgressBarAnimation 2s linear infinite;
+}
+
+div.progressBar.indeterminate div.progressBarTrack {
+    animation: indeterminateProgressBarTrackAnimation 2s linear infinite;
+}
+
+div.progressBar.error div.progressBarTrack {
+    background: rgb(200, 0, 0);
+}
+
+img.profile {
+    border-radius: 4px;
+    border: none;
+}
+
+img.profile.small {
+    width: 16px;
+    height: 16px;
+}
+
+canvas.profile.small {
+    width: 24px;
+    height: 24px;
+}
+
+p.error {
+    color: rgb(255, 50, 50);
+}
+
+@media (max-width: 900px) {
+    div.list .parentButton {
+        display: flex;
+    }
+
+    div.content > div {
+        display: none;
+    }
+
+    div.content.projects #projects {
+        display: block;
+    }
+
+    div.content.bugs #bugs, div.content.bugInfo #bugs {
+        display: block;
+    }
+
+    div.content #bugInfo {
+        display: block;
+    }
+}
+
+@media (max-width: 750px) {
+    div.dialog {
+        top: initial;
+        bottom: -1px;
+        left: -1px;
+        right: 0px;
+        width: calc(100% - 59px);
+        transform: none;
+        /*transform: translate(-50%, 0%);*/
+    }
+
+    div.dialog.noicon {
+        width: calc(100% - 18px);
+    }
+
+    #dlgLogin, #dlg2fa, #dlgProfileSettings {
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    div.parentButton {
+        display: flex;
+    }
+
+    div.list {
+        width: 100%;
+        border: none;
+    }
+
+    div.content.bugInfo #bugInfo {
+        display: block;
+    }
+
+    div.content #bugInfo, div.content.bugInfo #bugs {
+        display: none;
+    }
+
+    div.newBug {
+        width: calc(100% - 18px);
+    }
+
+    div.newBug.show {
+        left: -1px;
+    }
+
+    div.mainHeader .headerTitle {
+        font-size: 13pt;
+    }
+
+    img.smileIcon {
+        display: none;
+    }
+}
+
+
+
+
+

@@ -1,0 +1,81 @@
+<html>
+    <head>
+        <title>vicr123 Bug Reporting</title>
+        <link rel="stylesheet" href="/contemporary.css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="shortcut icon" href="/icon.png" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="/contemporary.js"></script>
+        <style>
+            div.landing {
+                padding-top: 100px;
+                padding-bottom: 100px;
+                padding-left: 100px;
+                padding-right: 100px;
+                
+                left: 0px;
+                right: 0px;
+                bottom: 0px;
+                top: 0px;
+                position: absolute;
+                
+                background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(/images/triangles.png) no-repeat center center/cover;
+            }
+                
+            @media (max-width: 500px) {
+                div.landing {
+                    padding-left: 10px;
+                    padding-right: 10px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="blanker" id="blanker"></div>
+        <div class="mainHeader" id="mainHeader">
+            <div class="headerItem">
+            </div>
+            <div class="headerProject">
+                <img class="smileIcon" src="/images/smile.png">
+                <div class="headerTitle">Bug Reporting</div>
+            </div>
+            <div style="display: flex">
+                <div class="headerItem">
+                
+                </div>
+            </div>
+        </div>
+        
+        <div class="landing">
+            <h1>Bug Reporting</h1>
+            <h2>Report bugs and suggest new features.</h2>
+            <p>Welcome to the vicr123 Bug Reporting system! Here you'll be able to report any bugs you find.</p>
+            <div class="buttonBox">
+                <a href="#" class="button" onclick="enter();">Enter</a>
+            </div>
+        </div>
+        <div class="dialog" id="dlgUnsupportedBrowser">
+            <h1>Unsupported Browser</h1>
+            <p>This browser isn't supported. For best results, please use one of the following browsers (or later)</p>
+            <ul>
+                <li>Internet Explorer 9+</li>
+                <li>Chrome 38+</li>
+                <li>Firefox 48+</li>
+                <li>Opera 48+</li>
+            </ul>
+            <div class="buttonBar">
+                <a href="#" class="button" onclick="dismissDialog('dlgUnsupportedBrowser');">OK</a>
+            </div>
+        </div>
+        
+        <script>
+            function enter() {
+                if (typeof(Storage) !== "undefined") {
+                    window.location = "/app/";
+                } else {
+                    showDialog("dlgUnsupportedBrowser");
+                }
+            }
+        </script>
+    </body>
+</html>
