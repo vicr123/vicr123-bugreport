@@ -280,6 +280,21 @@ void Request::processCompletedRequest() {
             path = path.left(path.indexOf("?"));
         }
 
+        QFileInfo fileInfo(rootPath + path);
+        if (!fileInfo.absolutePath().contains(rootPath)) {
+            Response err;
+            err.statusCode = 400;
+            err.WriteToConnection(connection, path);
+
+            if (isHead) {
+                method = "HEAD";
+                err.contents.clear();
+                err.allowEmptyContents = true;
+            }
+
+            return;
+        }
+
         QFile file(rootPath + path);
         if (!file.exists()) {
             Response err;

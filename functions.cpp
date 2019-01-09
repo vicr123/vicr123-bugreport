@@ -47,7 +47,7 @@ QString Functions::getHTTPStatusCode(int code) {
         case 300:
             return "Multiple Choices";
         case 301:
-            return "Moved Permanantly";
+            return "Moved Permanently";
         case 302:
             return "Found";
         case 303:
