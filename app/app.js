@@ -218,24 +218,24 @@ function load() {
                 contentType: "application/json",
                 timeout: 10000
             });
-            if (location.hash != "") {
-                let components = location.hash.split("/");
-                while (components[0] != "app") {
-                    components.shift();
-                    if (components.length == 0) {
-                        throw new Error("Invalid URL");
-                    }
+            let components = location.href.split("/");
+            while (components[0] != "app") {
+                components.shift();
+                if (components.length == 0) {
+                    throw new Error("Invalid URL");
                 }
-                if (components.length > 2) {
-                    currentProject = decodeURIComponent(components[1]);
-                    if (components[2] == "") {
-                        currentBug = -1;
-                    } else {
-                        currentBug = parseInt(components[2]);
-                    }
-                }
-                loadPage(currentProject, currentBug);
             }
+            if (components.length > 2) {
+                currentProject = decodeURIComponent(components[1]);
+                if (currentProject == "index.html") {
+                    currentProject = "";
+                } else if (components[2] == "") {
+                    currentBug = -1;
+                } else {
+                    currentBug = parseInt(components[2]);
+                }
+            }
+            loadPage(currentProject, currentBug);
 
             history.replaceState({project: currentProject, bug: currentBug}, document.title, location.hash.substring(1));
         }
