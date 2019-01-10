@@ -1,3 +1,5 @@
+const stdtitle = document.title;
+
 let loggedIn = false;
 let loginData;
 let currentProject = "";
@@ -79,6 +81,13 @@ function load() {
 
         window.addEventListener("offline", function() {
             showDialog("dlgOffline");
+        });
+        
+        window.addEventListener("popstate", function(e) {
+            if (e.state == null) {
+                e.state = {project: "", bug: -1};
+            }
+            loadPage(e.state.project, e.state.bug);
         });
 
         $("body").mousemove(function(e) {
@@ -166,23 +175,16 @@ function load() {
                 success: function(data, status, jqXHR) {
                     for (key in data) {
                         let obj = data[key];
-                        $('<div/>', {
+                        let elem = $('<div/>', {
                             html: '<img src="' + obj.icon + '" height="32" width="32" style="float: left"/>' + obj.name,
                             id: obj.name.replace(/ /g, "-")
                         }).click(function() {
-                            $("#projects .selected").each(function() {
-                                $(this).removeClass("selected");
-                            });
-                            $("#projects #" + obj.name.replace(/ /g, "-")).addClass("selected");
-
-                            loadBugs(obj.name);
-                            currentProject = obj.name;
-                            currentBug = -1;
-                            $("#newBugProjectName").text(obj.name);
-
-                            $("#contentContainer").removeClass("projects");
-                            $("#contentContainer").addClass("bugs");
+                            loadPage(obj.name, -1);
+                            history.pushState({project: obj.name, bug: -1}, document.title, "/app/" + obj.name + "/");
                         }).appendTo("#projects");
+                        if (obj.name == currentProject) {
+                            elem.addClass("selected");
+                        }
                     }
 
                     statReporter.html("Logging in...");
@@ -216,6 +218,26 @@ function load() {
                 contentType: "application/json",
                 timeout: 10000
             });
+            if (location.hash != "") {
+                let components = location.hash.split("/");
+                while (components[0] != "app") {
+                    components.shift();
+                    if (components.length == 0) {
+                        throw new Error("Invalid URL");
+                    }
+                }
+                if (components.length > 2) {
+                    currentProject = decodeURIComponent(components[1]);
+                    if (components[2] == "") {
+                        currentBug = -1;
+                    } else {
+                        currentBug = parseInt(components[2]);
+                    }
+                }
+                loadPage(currentProject, currentBug);
+            }
+
+            history.replaceState({project: currentProject, bug: currentBug}, document.title, location.hash.substring(1));
         }
         ws.onerror = function() {
             //Check rate limit
@@ -237,7 +259,6 @@ function load() {
         ws.onclose = function() {
             showDialog("dlgDisconnected");
         }
-        
     } catch (err) {
         document.getElementById("dlgLoadFail").classList.add("show");
         document.getElementById("blanker").classList.add("show");
@@ -344,7 +365,7 @@ function patchBug(data, projectName, id) {
     });
 }
 
-function loadBugs(projectName) {
+function loadBugs(projectName, bug = -1) {
     $("#bugs").find("*").not(".coverLoader, .loader").remove();
     $("#coverLoaderBugs").addClass("show");
     $("#bugInfo").removeClass("details");
@@ -461,11 +482,16 @@ function loadBugs(projectName) {
                     $("#bugs #" + obj.id).addClass("selected");
 
                     loadBug(projectName, obj.id);
+                    history.pushState({project: projectName, bug: obj.id}, document.title, "/app/" + projectName + "/" + obj.id.toString() + "/");
                     $("#contentContainer").removeClass("bugs");
                     $("#contentContainer").addClass("bugInfo");
                 }).contextmenu(function() {
                     showContextMenu(cxMenu);
                 }).appendTo("#bugs");
+
+                if (obj.id == bug) {
+                    listItem.addClass("selected");
+                }
 
                 $("<span/>", {
                     class: "listId",
@@ -579,6 +605,8 @@ function loadBug(projectName, id) {
                 $("#bugOpen").addClass("bugClosed");
             }
 
+            document.title = data.title + " - " + currentProject + " - " + stdtitle;
+
             let importance;
             switch (data.importance) {
                 case 0:
@@ -678,6 +706,40 @@ function loadBug(projectName, id) {
         contentType: "application/json",
         timeout: 10000
     });
+}
+
+function loadPage(project, bug) {
+    $("#projects .selected").each(function() {
+        $(this).removeClass("selected");
+    });
+
+    document.title = stdtitle;
+
+    if (project == "") {
+        $("#contentContainer").removeClass("bugs");
+        $("#contentContainer").removeClass("bugInfo");
+        $("#contentContainer").addClass("projects");
+        return;
+    }
+    
+    document.title = project + " - " + stdtitle;
+    $("#projects #" + project.replace(/ /g, "-")).addClass("selected");
+
+    loadBugs(project, bug);
+    currentProject = project;
+    currentBug = bug;
+    $("#newBugProjectName").text(project);
+
+    if (bug == -1) {
+        $("#contentContainer").removeClass("projects");
+        $("#contentContainer").removeClass("bugInfo");
+        $("#contentContainer").addClass("bugs");
+    } else {
+        loadBug(project, bug);
+        $("#contentContainer").removeClass("projects");
+        $("#contentContainer").removeClass("bugs");
+        $("#contentContainer").addClass("bugInfo");
+    }
 }
 
 function fileBug() {
