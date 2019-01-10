@@ -3,7 +3,7 @@
     <head>
         <title>vicr123 Bug Reporting</title>
         <link rel="stylesheet" href="/contemporary.css" />
-        <link rel="stylesheet" href="app.css" />
+        <link rel="stylesheet" href="/app/app.css" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="HandheldFriendly" content="true">
         <link rel="shortcut icon" href="/icon.png" />
@@ -13,9 +13,9 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
         <script>if (window.module) module = window.module;</script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.7.6/showdown.min.js"></script>
-        <script src="xss.js" type="text/javascript"></script>
+        <script src="/app/xss.js" type="text/javascript"></script>
         <script src="/contemporary.js"></script>
-        <script src="app.js"></script>
+        <script src="/app/app.js"></script>
         <script src="/autosize.min.js"></script>
     </head>
     <body onload="load()">
@@ -234,7 +234,7 @@
             </div>
         </div>
         <div class="dialog" id="dlgLogin">
-            <iframe src="login.html" id="loginiFrame"></iframe>
+            <iframe src="/app/login.html" id="loginiFrame"></iframe>
         </div>
         <div class="dialog noicon" id="dlgEdit">
             <div id="dlgEditWrapper">
@@ -262,7 +262,7 @@
             </div>
         </div>
         <div class="dialog" id="dlgProfileSettings">
-            <iframe src="usersettings.html" id="usersettingsiframe"></iframe>
+            <iframe src="/app/usersettings.html" id="usersettingsiframe"></iframe>
         </div>
         <div class="dialog" id="dlgLogout">
             <img src="/images/dialog-warning.svg" class="icon" />
@@ -293,7 +293,7 @@
             </div>
         </div>
         <div class="dialog" id="dlg2fa">
-            <iframe src="2fa.html" id="2faiFrame"></iframe>
+            <iframe src="/app/2fa.html" id="2faiFrame"></iframe>
         </div>
         <div class="dialog" id="dlgLink">
             <img src="/images/dialog-warning.svg" class="icon" />
