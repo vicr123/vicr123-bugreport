@@ -92,7 +92,7 @@ void Response::WriteToConnection(Connection *connection, QString path) const {
         if (connection->getRequest().headers.contains("Accept-Encoding") && connection->getRequest().path != "/api/socket") {
             QString encoding = connection->getRequest().headers.value("Accept-Encoding");
             QStringList acceptedEncoding = encoding.split(", ");
-            if (acceptedEncoding.contains("gzip")) {
+            if (acceptedEncoding.contains("gzip") && statusCode / 100 != 3) {
                 //Compress body with gzip
                 dataOut = gzip(dataOut);
                 headersOut.insert("Content-Length", QString::number(dataOut.length()));
@@ -263,7 +263,7 @@ void Request::processCompletedRequest() {
 
     if (path.endsWith("/")) {
         Response rdr;
-        rdr.statusCode = 303;
+        rdr.statusCode = 301;
         if (path.startsWith("/app/")) {
             // Dynamic URL.
             rdr.headers.insert("Location", "/app/index.html#" + path);
