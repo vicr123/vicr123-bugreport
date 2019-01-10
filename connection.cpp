@@ -264,7 +264,12 @@ void Request::processCompletedRequest() {
     if (path.endsWith("/")) {
         Response rdr;
         rdr.statusCode = 303;
-        rdr.headers.insert("Location", path + "index.html");
+        if (path.startsWith("/app/")) {
+            // Dynamic URL.
+            rdr.headers.insert("Location", "/app/index.html#" + path);
+        } else {
+            rdr.headers.insert("Location", path + "index.html");
+        }
         rdr.allowEmptyContents = true;
 
         if (isHead) {
