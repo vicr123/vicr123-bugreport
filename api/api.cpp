@@ -952,8 +952,8 @@ Response Api::processPath(Request req) {
                 }
 
                 int id = q.value("id").toInt();
-                QString passwordHash = q.value("password").toString();
-                QString passwordSalt = q.value("passwordSalt").toString();
+                QString passwordHash;
+                QString passwordSalt;
                 QString email = q.value("email").toString();
                 QString username = q.value("username").toString();
 
@@ -970,7 +970,7 @@ Response Api::processPath(Request req) {
                 QJsonDocument doc = QJsonDocument::fromJson(req.body);
                 QJsonObject obj = doc.object();
 
-                if (obj.contains("username")) {
+                if (obj.contains("username") && username != obj.value("username").toString()) {
                     username = obj.value("username").toString();
 
                     //Check username is not already used
@@ -986,7 +986,7 @@ Response Api::processPath(Request req) {
                     }
                 }
 
-                if (obj.contains("email")) {
+                if (obj.contains("email") && email != obj.value("email").toString()) {
                     email = obj.value("email").toString();
 
                     //Check email is not already used
