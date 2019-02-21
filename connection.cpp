@@ -160,17 +160,21 @@ void Request::appendBuffer(QByteArray buffer) {
         return;
     }
 
-    QString req = QString(this->buffer);
-    QStringList lines = req.split("\r\n");
+    //QString req = QString(this->buffer);
+    QByteArray req = this->buffer;
+    //QStringList lines = req.split("\r\n");
+
+    QBuffer buf(&req);
+    buf.open(QBuffer::ReadOnly);
 
     bool readHeaders = true;
-    for (int i = 0; i < lines.count(); i++) {
+    while (!buf.atEnd()) {
         if (stopProcess) {
             break;
         }
 
-        QString line = lines.at(i);
-        if (line == "" && readHeaders) { //End of section
+        QByteArray line = buf.readLine();
+        if (line == "\r\n" && readHeaders) { //End of section
             if (method == "POST" || method == "PATCH") {
                 readHeaders = false;
             } else {
@@ -186,10 +190,10 @@ void Request::appendBuffer(QByteArray buffer) {
                     headers.insert(key, value);
                 }
             } else {
-                QByteArray itemsToAppend = QString(line + "\r\n").toUtf8();
-                body.append(itemsToAppend);
+                //QByteArray itemsToAppend = QString(line + "\r\n").toUtf8();
+                body.append(line);
 
-                bodyRead += itemsToAppend.length();
+                bodyRead += line.length();
                 if (bodyRead >= headers.value("Content-Length").toInt()) {
                     processCompletedRequest();
                     stopProcess = true;

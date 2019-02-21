@@ -17,6 +17,7 @@
 #include "socketapi.h"
 #include "mail/mailsender.h"
 
+#define HTTP_RET(statuscode) {rsp.statusCode = statuscode;return rsp;}
 #define SQL_CHECK if (q.lastError().type() != QSqlError::NoError) err(q.lastError().text() + "\n @ " + QString::number(__LINE__));
 #define ASSERT_TABLE(table) if (!projectExists(table)) {rsp.statusCode = 404;return rsp;}
 

@@ -23,7 +23,8 @@ SOURCES += main.cpp \
     api/api.cpp \
     api/ratelimit.cpp \
     api/socketapi.cpp \
-    mail/mailsender.cpp
+    mail/mailsender.cpp \
+    api/types/multipartformdata.cpp
 
 HEADERS += \
     functions.h \
@@ -32,4 +33,5 @@ HEADERS += \
     api/api.h \
     api/ratelimit.h \
     api/socketapi.h \
-    mail/mailsender.h
+    mail/mailsender.h \
+    api/types/multipartformdata.h

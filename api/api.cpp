@@ -1,4 +1,7 @@
 #include "api.h"
+#include "types/multipartformdata.h"
+
+#include <QRandomGenerator>
 
 using namespace Functions;
 extern Ratelimit* ratelimit;
@@ -25,6 +28,7 @@ Response Api::processPath(Request req) {
     Response rsp;
     QString token = req.headers.value("Authorization");
     QString headerPassword = req.headers.value("Password");
+    QString contentType = req.headers.value("Content-Type");
 
     //Check ratelimits
     RatelimitItem limit = ratelimit->getRateLimit(req.connection->peerAddress());
@@ -39,34 +43,29 @@ Response Api::processPath(Request req) {
     ratelimit->decrement(req.connection->peerAddress());
 
     if (!db.isOpen()) {
-        rsp.statusCode = 500;
-        return rsp;
+        HTTP_RET(500);
     } else {
         if (req.path == "/api/socket") {
             if (req.method != "GET") {
-                rsp.statusCode = 405;
-                return rsp;
+                HTTP_RET(405);
             }
 
             QStringList connectionParams = req.headers.value("Connection").split(", ");
             if (req.headers.value("Upgrade") != "websocket" || !connectionParams.contains("Upgrade")) {
                 log("WebSockets Handshake Failed - Incorrect Upgrade Headers");
-                rsp.statusCode = 400;
-                return rsp;
+                HTTP_RET(400);
             }
 
             //Read handshake
             if (req.headers.value("Sec-WebSocket-Version") != "13") {
                 log("WebSockets Handshake Failed - Incorrect WebSockets Version");
-                rsp.statusCode = 400;
                 rsp.headers.insert("Sec-WebSocket-Version", "13");
-                return rsp;
+                HTTP_RET(400);
             }
 
             if (!req.headers.contains("Sec-WebSocket-Key")) {
                 log("WebSockets Handshake Failed - Unknown WebSockets Key");
-                rsp.statusCode = 400;
-                return rsp;
+                HTTP_RET(400);
             }
 
             QString key = req.headers.value("Sec-WebSocket-Key");
@@ -92,8 +91,7 @@ Response Api::processPath(Request req) {
             return rsp;
         } else if (req.path == "/api/projects") { //Get projects
             if (req.method != "GET") {
-                rsp.statusCode = 405;
-                return rsp;
+                HTTP_RET(405);
             }
             QSqlQuery q = db.exec("SELECT * FROM projects ORDER BY \"order\" ASC");
 
@@ -140,8 +138,7 @@ Response Api::processPath(Request req) {
                     int tableId = getProjectId(table);
 
                     if (tableId == -1) {
-                        rsp.statusCode = 404;
-                        return rsp;
+                        HTTP_RET(404);
                     }
 
                     if (currentUser == "") {
@@ -186,19 +183,16 @@ Response Api::processPath(Request req) {
                     int tableId = getProjectId(table);
 
                     if (tableId == -1) {
-                        rsp.statusCode = 404;
-                        return rsp;
+                        HTTP_RET(404);
                     }
 
                     if (bugID == "create") { //Create new bug
-                        rsp.statusCode = 405;
-                        return rsp;
+                        HTTP_RET(405);
                     }
 
                     q = getBug(tableId, bugID);
                     if (!q.next()) {
-                        rsp.statusCode = 404;
-                        return rsp;
+                        HTTP_RET(404);
                     }
                     ASSERT_PRIVATE_BUG_ALLOW_READ(currentUser, isAdmin)
 
@@ -216,14 +210,12 @@ Response Api::processPath(Request req) {
                     int tableId = getProjectId(table);
 
                     if (tableId == -1) {
-                        rsp.statusCode = 404;
-                        return rsp;
+                        HTTP_RET(404);
                     }
 
                     QSqlQuery q = getBug(tableId, bugID);
                     if (!q.next()) {
-                        rsp.statusCode = 404;
-                        return rsp;
+                        HTTP_RET(404);
                     }
                     ASSERT_PRIVATE_BUG_ALLOW_READ(currentUser, isAdmin)
 
@@ -235,12 +227,10 @@ Response Api::processPath(Request req) {
                         rsp.headers.insert("Content-Type", "text/json; charset=utf-8");
                         return rsp;
                     } else {
-                        rsp.statusCode = 404;
-                        return rsp;
+                        HTTP_RET(404);
                     }
                 } else {
-                    rsp.statusCode = 404;
-                    return rsp;
+                    HTTP_RET(404);
                 }
             } else if (req.method == "POST") {
                 if (parts.length() == 4) {
@@ -250,17 +240,14 @@ Response Api::processPath(Request req) {
                     int tableId = getProjectId(table);
 
                     if (tableId == -1) {
-                        rsp.statusCode = 404;
-                        return rsp;
+                        HTTP_RET(404);
                     }
 
                     if (bugID == "create") {
                         //Get user
                         QSqlQuery q = user(token);
-
                         if (!q.next()) {
-                            rsp.statusCode = 401;
-                            return rsp;
+                            HTTP_RET(401);
                         }
 
                         //Create a new bug
@@ -269,31 +256,44 @@ Response Api::processPath(Request req) {
 
                         QString title = obj.value("title").toString();
                         QString body = obj.value("body").toString();
+                        QJsonArray attachments = obj.value("attachments").toArray();
                         int author = q.value("id").toInt();
                         int importance = obj.value("importance").toInt(3);
 
                         if (body.length() > 10000) {
                             //Exceeded body limit
-                            rsp.statusCode = 400;
                             rsp.contents = "Body greater than 10000 characters";
-                            return rsp;
+                            HTTP_RET(400);
                         }
 
                         if (title.length() > 100) {
                             //Exceeded body limit
-                            rsp.statusCode = 400;
                             rsp.contents = "Title greater than 100 characters";
-                            return rsp;
+                            HTTP_RET(400);
                         }
 
                         if (importance < 0 || importance > 6) {
                             //Not within range
-                            rsp.statusCode = 400;
                             rsp.contents = "Importance not between 0 and 6";
-                            return rsp;
+                            HTTP_RET(400);
                         }
 
-                        q.prepare("INSERT INTO \"bugs\" (title, body, author, isopen, importance, project, projectNum, isprivate) VALUES (:TITLE, :BODY, :AUTHOR, :ISOPEN, :IMPORTANCE, :TABLE, :PROJECTNUM, :ISPRIVATE)");
+                        //Ensure each attachment exists
+                        for (QJsonValue v : attachments) {
+                            int attachmentId = v.toInt();
+                            QSqlQuery q;
+                            q.prepare("SELECT * FROM \"files\" WHERE id=:ID");
+                            q.bindValue(":ID", attachmentId);
+                            q.exec();
+
+                            if (!q.next()) {
+                                //Attachment does not exist
+                                rsp.contents = "Attachment does not exist";
+                                HTTP_RET(400);
+                            }
+                        }
+
+                        q.prepare("INSERT INTO \"bugs\" (title, body, author, isopen, importance, project, projectNum, isprivate) VALUES (:TITLE, :BODY, :AUTHOR, :ISOPEN, :IMPORTANCE, :TABLE, :PROJECTNUM, :ISPRIVATE) RETURNING id");
                         q.bindValue(":TITLE", title);
                         q.bindValue(":BODY", body);
                         q.bindValue(":AUTHOR", author);
@@ -306,15 +306,52 @@ Response Api::processPath(Request req) {
 
                         if (!q.exec()) {
                             SQL_CHECK
-                            rsp.statusCode = 500;
-                            return rsp;
+                            HTTP_RET(500);
+                        }
+
+                        q.next();
+
+                        int bugId = q.value("id").toInt();
+
+                        //Connect each attachment
+                        for (QJsonValue v : attachments) {
+                            int attachmentId = v.toInt();
+
+                            q.prepare("INSERT INTO \"bugsattachments\" (bugid, attachmentid) VALUES (:BUGID, :ATTACHMENTID)");
+                            q.bindValue(":BUGID", bugId);
+                            q.bindValue(":ATTACHMENTID", attachmentId);
+                            SQL_CHECK
+
+                            if (!q.exec()) {
+                                SQL_CHECK
+                                HTTP_RET(500);
+                            }
+                        }
+
+                        //Tell the admin
+                        if (settings.value("newBugNotification/enabled", false).toBool()) {
+                            int count = settings.beginReadArray("newBugNotification/people");
+                            for (int i = 0; i < count; i++) {
+                                settings.setArrayIndex(i);
+
+                                QString activationUrl = QUrl("http://" + settings.value("www/host").toString() + "/app/" + table + "/" + QString::number(bugId) + "/").toEncoded();
+
+                                MailMessage msg("newbug", QStringList() << settings.value("name").toString() << table.replace("%20", " ") << activationUrl);
+                                msg.subject = "A new bug has been filed!";
+
+                                QMap<QString, QString> to;
+                                to.insert(settings.value("email").toString(), settings.value("name").toString());
+                                msg.to = to;
+
+                                mail->send(msg);
+                            }
+                            settings.endArray();
                         }
 
                         rsp.statusCode = 200;
                         return rsp;
                     } else {
-                        rsp.statusCode = 405;
-                        return rsp;
+                        HTTP_RET(405);
                     }
                 } else if (parts.count() == 5) {
                     QString table = parts.at(2);
@@ -355,17 +392,31 @@ Response Api::processPath(Request req) {
                         QJsonDocument doc = QJsonDocument::fromJson(req.body);
                         QJsonObject obj = doc.object();
                         QString body = obj.value("body").toString();
+                        QJsonArray attachments = obj.value("attachments").toArray();
 
                         if (body == "") {
-                            rsp.statusCode = 400;
-                            return rsp;
+                            HTTP_RET(400);
                         }
 
                         if (body.length() > 10000) {
                             //Exceeded body limit
-                            rsp.statusCode = 400;
                             rsp.contents = "Body greater than 10000 characters";
-                            return rsp;
+                            HTTP_RET(400);
+                        }
+
+                        //Ensure each attachment exists
+                        for (QJsonValue v : attachments) {
+                            int attachmentId = v.toInt();
+                            QSqlQuery q;
+                            q.prepare("SELECT * FROM \"files\" WHERE id=:ID");
+                            q.bindValue(":ID", attachmentId);
+                            q.exec();
+
+                            if (!q.next()) {
+                                //Attachment does not exist
+                                rsp.contents = "Attachment does not exist";
+                                HTTP_RET(400);
+                            }
                         }
 
                         q.prepare("INSERT INTO \"comments\" (text, author) VALUES (:TEXT, :AUTHOR) RETURNING *");
@@ -375,15 +426,29 @@ Response Api::processPath(Request req) {
 
                         if (!q.next()) {
                             SQL_CHECK
-                            rsp.statusCode = 500;
-                            return rsp;
+                            HTTP_RET(500);
                         }
 
+                        QString id = q.value("id").toString();
                         QString timestamp = q.value("timestamp").toString();
 
-                        QMap<QString, QString> emails;
 
-                        QString id = q.value("id").toString();
+                        //Connect each attachment
+                        for (QJsonValue v : attachments) {
+                            int attachmentId = v.toInt();
+
+                            q.prepare("INSERT INTO \"commentsattachments\" (commentid, attachmentid) VALUES (:COMMENTID, :ATTACHMENTID)");
+                            q.bindValue(":COMMENTID", id);
+                            q.bindValue(":ATTACHMENTID", attachmentId);
+                            SQL_CHECK
+
+                            if (!q.exec()) {
+                                SQL_CHECK
+                                HTTP_RET(500);
+                            }
+                        }
+
+                        QMap<QString, QString> emails;
                         QStringList commentIds;
                         for (QJsonValue v : coms) {
                             QJsonObject object = v.toObject();
@@ -427,7 +492,9 @@ Response Api::processPath(Request req) {
 
                             QList<MailMessage> messages;
                             for (QString email : emails.keys()) {
-                                MailMessage msg("commentAdded", QStringList() << emails.value(email) << "#" + bugID << q.value("name").toString() << authorName << obj.value("body").toString());
+                                QString activationUrl = QUrl("http://" + settings.value("www/host").toString() + "/app/" + q.value("name").toString() + "/" + bugID + "/").toEncoded();
+
+                                MailMessage msg("commentAdded", QStringList() << emails.value(email) << "#" + bugID << q.value("name").toString() << authorName << obj.value("body").toString() << activationUrl);
                                 msg.subject = "New comment on bug #" + bugID + " in project " + q.value("name").toString();
 
                                 QMap<QString, QString> to;
@@ -674,27 +741,147 @@ Response Api::processPath(Request req) {
                         rsp.statusCode = 204;
                         return rsp;
                     } else {
-                        rsp.statusCode = 404;
-                        return rsp;
+                        HTTP_RET(404);
                     }
                 } else {
-                    rsp.statusCode = 404;
-                    return rsp;
+                    HTTP_RET(404);
                 }
             } else {
-                rsp.statusCode = 405;
-                return rsp;
+                HTTP_RET(405);
             }
+        } else if (req.path == "/api/attachments") {
+            if (req.method != "POST") {
+                HTTP_RET(405);
+            }
+
+            //Get user
+            QSqlQuery q = user(token);
+            if (!q.next()) {
+                HTTP_RET(401);
+            }
+
+            int userId = q.value("id").toInt();
+
+            QStringList contentTypeParts = contentType.split(";");
+            if (contentTypeParts.count() < 2) {
+                HTTP_RET(400);
+            }
+            if (contentTypeParts.first().trimmed() != "multipart/form-data") {
+                HTTP_RET(400);
+            }
+            if (!contentTypeParts.at(1).startsWith(" boundary=")) {
+                HTTP_RET(400);
+            }
+
+            QString boundary = contentTypeParts.at(1).mid(10);
+            MultiPartFormData formData(req.body, boundary);
+
+            //Perform a sanity check to make sure all these files are okay
+            for (MultiPartPart p : formData.parts()) {
+                QStringList dispositionParts = p.headers.value("Content-Disposition").split(";");
+
+                if (dispositionParts.count() < 2) {
+                    HTTP_RET(400);
+                }
+
+                bool haveFilename = false;
+                for (QString part : dispositionParts) {
+                    if (part.startsWith(" filename=")) haveFilename = true;
+                }
+
+                if (!haveFilename) {
+                    HTTP_RET(400);
+                }
+            }
+
+            //Save all the files
+            QJsonArray filesArray;
+            for (MultiPartPart p : formData.parts()) {
+                QStringList dispositionParts = p.headers.value("Content-Disposition").split(";");
+
+                QString displayFile;
+                for (QString part : dispositionParts) {
+                    if (part.startsWith(" filename=")) {
+                        displayFile = part.mid(10);
+
+                        if (displayFile.startsWith("\"")) {
+                            displayFile.remove(0, 1);
+                        }
+                        if (displayFile.endsWith("\"")) {
+                            displayFile.chop(1);
+                        }
+                    }
+                }
+
+                //Find a temporary filename
+                QString filename;
+                do {
+                    filename.clear();
+                    QString selection = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+                    for (int i = 0; i < 64; i++) {
+                        filename.append(selection.at(QRandomGenerator::global()->bounded(selection.length())));
+                    }
+
+                    if (displayFile.contains(".")) {
+                        filename.append(displayFile.mid(displayFile.indexOf(".")));
+                    }
+
+                    q.prepare("SELECT * FROM \"files\" WHERE filename=:FILENAME");
+                    q.bindValue(":FILENAME", filename);
+                    q.exec();
+                } while (q.next());
+
+                //Generate ID
+                int id;
+                do {
+                    id = QRandomGenerator::global()->bounded(RAND_MAX);
+                    q.prepare("SELECT * FROM \"files\" WHERE id=:ID");
+                    q.bindValue(":ID", id);
+                    q.exec();
+                } while (q.next());
+
+                //Save the file
+                QDir attachmentDirectory(QDir(settings.value("www/path").toString()).absoluteFilePath("attachments"));
+                if (!attachmentDirectory.exists()) {
+                    QDir::root().mkpath(attachmentDirectory.absolutePath());
+                }
+
+                QFile file(attachmentDirectory.absoluteFilePath(filename));
+                file.open(QFile::WriteOnly);
+                file.write(p.data);
+                file.close();
+
+                q.prepare("INSERT INTO \"files\" (id, userid, filename, displayfilename) VALUES (:ID, :USERID, :FILENAME, :DISPLAYFILENAME)");
+                q.bindValue(":ID", id);
+                q.bindValue(":USERID", userId);
+                q.bindValue(":FILENAME", filename);
+                q.bindValue(":DISPLAYFILENAME", displayFile);
+                if (!q.exec()) {
+                    SQL_CHECK
+                    HTTP_RET(500);
+                }
+
+                QJsonObject o;
+                o.insert("id", id);
+                o.insert("displayfilename", displayFile);
+                o.insert("filename", filename);
+
+                filesArray.append(o);
+            }
+
+
+            rsp.statusCode = 200;
+            rsp.contents = QJsonDocument(filesArray).toJson();
+            rsp.headers.insert("Content-Type", "text/json; charset=utf-8");
+            return rsp;
         } else if (req.path == "/api/users/create") {
             if (req.method != "POST") {
-                rsp.statusCode = 405;
-                return rsp;
+                HTTP_RET(405);
             }
 
             QJsonDocument doc = QJsonDocument::fromJson(req.body);
             if (doc.isNull() || !doc.isObject()) {
-                rsp.statusCode = 400;
-                return rsp;
+                HTTP_RET(400);
             }
 
             QJsonObject obj = doc.object();
@@ -708,8 +895,7 @@ Response Api::processPath(Request req) {
             QString password = obj.value("password").toString();
 
             if (email == "" || username == "" || password == "") {
-                rsp.statusCode = 400;
-                return rsp;
+                HTTP_RET(400);
             }
 
             //Check username is not already used
@@ -719,9 +905,8 @@ Response Api::processPath(Request req) {
             q.exec();
 
             if (q.next()) {
-                rsp.statusCode = 409;
                 rsp.contents = "Username Already Used";
-                return rsp;
+                HTTP_RET(409);
             }
 
             //Check email is not already used
@@ -730,9 +915,8 @@ Response Api::processPath(Request req) {
             q.exec();
 
             if (q.next()) {
-                rsp.statusCode = 409;
                 rsp.contents = "Email Already Used";
-                return rsp;
+                HTTP_RET(409);
             }
 
             //Check email is actually valid
@@ -740,9 +924,8 @@ Response Api::processPath(Request req) {
             emailRegex.setCaseSensitivity(Qt::CaseInsensitive);
             emailRegex.setPatternSyntax(QRegExp::RegExp);
             if (!emailRegex.exactMatch(email)) {
-                rsp.statusCode = 400;
                 rsp.contents = "Invalid Email";
-                return rsp;
+                HTTP_RET(400);
             }
 
             //Add to database
@@ -1265,16 +1448,47 @@ QString Api::getValidToken() {
 
 QJsonObject Api::extractBug(QSqlQuery q) {
     QJsonObject obj;
+
+    int bugId = q.value("id").toInt();
+
     obj.insert("id", q.value("projectnum").toString());
     obj.insert("title", q.value("title").toString());
     obj.insert("body", q.value("body").toString());
     obj.insert("timestamp", q.value("timestamp").toString());
-    obj.insert("attachments", q.value("attachments").toString());
     obj.insert("comments", q.value("comments").toString());
     obj.insert("author", q.value("author").toString());
     obj.insert("isOpen", q.value("isopen").toBool());
     obj.insert("importance", q.value("importance").toInt());
     obj.insert("private", q.value("isprivate").toBool());
+
+    //Find all the attachments for this bug
+    QJsonArray attachments;
+    QMimeDatabase mimeDatabase;
+
+    QSqlQuery query;
+    query.prepare("SELECT * FROM \"bugsattachments\" WHERE \"bugid\"=:BUGID");
+    query.bindValue(":BUGID", bugId);
+    query.exec();
+
+    while (query.next()) {
+        int attachmentId = query.value("attachmentid").toInt();
+        QSqlQuery atQuery;
+        atQuery.prepare("SELECT * FROM \"files\" WHERE \"id\"=:ID");
+        atQuery.bindValue(":ID", attachmentId);
+        atQuery.exec();
+        if (atQuery.next()) {
+            QFileInfo info(QDir(settings.value("www/path").toString()).absoluteFilePath("attachments/" + atQuery.value("filename").toString()));
+            QJsonObject attachmentDetails;
+            attachmentDetails.insert("link", "/attachments/" + atQuery.value("filename").toString());
+            attachmentDetails.insert("displayName", atQuery.value("displayfilename").toString());
+            attachmentDetails.insert("size", info.size());
+            attachmentDetails.insert("type", mimeDatabase.mimeTypeForFile(info).name());
+            attachments.append(attachmentDetails);
+        }
+    }
+
+    obj.insert("attachments", attachments);
+
     return obj;
 }
 
@@ -1341,6 +1555,35 @@ QJsonArray Api::comments(int table, QString id) {
                     obj.insert("id", comment);
                     obj.insert("author", q.value("author").toString());
                     obj.insert("system", false);
+
+                    //Find all the attachments for this comment
+                    QJsonArray attachments;
+                    QMimeDatabase mimeDatabase;
+
+                    QSqlQuery query;
+                    query.prepare("SELECT * FROM \"commentsattachments\" WHERE \"commentid\"=:COMMENTID");
+                    query.bindValue(":COMMENTID", comment);
+                    query.exec();
+
+                    while (query.next()) {
+                        int attachmentId = query.value("attachmentid").toInt();
+                        QSqlQuery atQuery;
+                        atQuery.prepare("SELECT * FROM \"files\" WHERE \"id\"=:ID");
+                        atQuery.bindValue(":ID", attachmentId);
+                        atQuery.exec();
+                        if (atQuery.next()) {
+                            QFileInfo info(QDir(settings.value("www/path").toString()).absoluteFilePath("attachments/" + atQuery.value("filename").toString()));
+                            QJsonObject attachmentDetails;
+                            attachmentDetails.insert("link", "/attachments/" + atQuery.value("filename").toString());
+                            attachmentDetails.insert("displayName", atQuery.value("displayfilename").toString());
+                            attachmentDetails.insert("size", info.size());
+                            attachmentDetails.insert("type", mimeDatabase.mimeTypeForFile(info).name());
+                            attachments.append(attachmentDetails);
+                        }
+                    }
+
+                    obj.insert("attachments", attachments);
+
                     arr.append(obj);
                 }
             }
