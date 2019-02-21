@@ -51,9 +51,6 @@
                 </div>
             </div>
             <div id="bugInfo" class="panel">
-                <div class="parentButton" onclick="$('#contentContainer').removeClass('bugInfo');$('#contentContainer').addClass('bugs');">
-                    <img src="/images/arrow-left.svg" />Go Back
-                </div>
                 <div id="bugCover">
                     <h1>Welcome!</h1>
                     <img src="/images/landing.svg" />
@@ -62,9 +59,14 @@
                         <a href="#" class="button" onclick="fileBug()">File New Ticket</a>
                     </div>
                 </div>
+                <div class="bugTitleWrapper">
+                    <div class="parentButtonTitle" onclick="$('#contentContainer').removeClass('bugInfo');$('#contentContainer').addClass('bugs');">
+                        <img src="/images/arrow-left.svg" />
+                    </div>
+                    <h2 id="bugTitle">Ticket Title</h2>
+                </div>
                 <div id="bugContents">
                     <div class="bugTop" id="bugTop">
-                            <h1 id="bugTitle">Ticket Title</h1>
                             <div id="bugMetadata">
                                 <table>
                                     <tbody>
@@ -82,6 +84,7 @@
                     </div>
                     <div class="bugBody" id="bugBodyWrapper">
                         <div id="bugBody" class="bugContents"></div>
+                        <div class="attachments" id="bugAttachments"></div>
                         <div class="bugBodyMetadata">
                             <img id="bugProfilePicture" class="small profile" />
                             <span id="bugReporter"></span> &bullet; 
@@ -95,7 +98,7 @@
                     </div>
                     <div id="commentsWrapper">
                         <div id="commentsBox">
-                            <input type="file" id="commentsFileUploader" multiple style="display: none" onchange="uploadAttachments(this.files)"/>
+                            <input type="file" id="commentsFileUploader" multiple style="display: none" onchange="uploadNewCommentAttachment(this.files)"/>
                             <div class="dropTarget" id="commentsDropTarget">
                                 <h1>Drop files</h1>
                                 <p>Drop files here to attach them to this comment</p>
@@ -110,6 +113,7 @@
                                 <a class="button" onclick="sendComment()" /><img src="/images/mail-send.svg" />Send</a>
                         </div>
                     </div>
+                    <div class="uploads" id="newCommentFileUploads">
                 </div>
             </div>
         </div>

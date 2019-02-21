@@ -62,6 +62,27 @@ body {
     overflow: hidden;
 }
 
+div.bugTitleWrapper {
+    display: none;
+    align-items: center;
+
+    height: 40px;
+    border-bottom: 1px solid var(--fg-color);
+}
+
+div.bugTitleWrapper .parentButtonTitle {
+    display: none;
+    padding-left: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    padding-right: 12px;
+}
+
+h2 {
+    padding-left: 9px;
+    padding-right: 9px;
+}
+
 div.landing {
     left: 0px;
     right: 0px;
@@ -334,6 +355,10 @@ div#bugCover * {
     overflow: hidden;
 }
 
+#bugInfo.details div.bugTitleWrapper {
+    display: flex;
+}
+
 div.newBug {
     position: fixed;
     height: calc(100vh - 65px);
@@ -400,6 +425,22 @@ div.newBug * {
 div#bugContents * {
     margin-top: 3px;
     margin-bottom: 3px;
+}
+
+div.attachments > * {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 9px;
+    border: 1px solid var(--fg-color);
+    padding: 9px;
+    overflow-x: auto;
+    width: calc(100% - 20px);
+}
+
+div.attachments > * > * {
+    padding-left: 3px;
+    padding-right: 3px;
 }
 
 div.bugBody {
@@ -799,8 +840,8 @@ p.error {
 }
 
 @media (max-width: 600px) {
-    div.parentButton {
-        display: flex;
+    div.bugTitleWrapper .parentButtonTitle {
+        display: block;
     }
 
     div.list {

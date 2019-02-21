@@ -61,6 +61,9 @@ let mouseX, mouseY;
     var img13 = new Image();
     img13.src = "/images/request.svg";
 
+    var img14 = new Image();
+    img14.src = "/images/none.svg";
+
 }
 
 console.log("%cWARNING", "color: yellow; font-size: xx-large");
@@ -147,6 +150,16 @@ function load() {
                 $("#commentsDropTarget").addClass("show");
             }
         });
+        $("#newBugContent").on({
+            "paste": function(event) {
+                if (event.originalEvent.clipboardData.files.length != 0) {
+                    event.stopPropagation();
+                    event.preventDefault();
+
+                    uploadNewBugAttachment(event.originalEvent.clipboardData.files);
+                }
+            }
+        });
         $(".dropTarget").on({
             "dragleave": function(event) {
                 event.preventDefault();
@@ -161,7 +174,12 @@ function load() {
                 //Upload files
                 event.preventDefault();
                 event.stopPropagation();
-                uploadNewBugAttachment(event.originalEvent.dataTransfer.files);
+
+                if (event.target == document.getElementById("newBugDropTarget")) {
+                    uploadNewBugAttachment(event.originalEvent.dataTransfer.files);
+                } else {
+                    uploadNewCommentAttachment(event.originalEvent.dataTransfer.files);
+                }
             }
         });
 
@@ -169,6 +187,11 @@ function load() {
         //Connect to WebSockets
         connectWs();
         ws.onopen = function() {
+            //Keep the websockets connection alive
+            setInterval(function() {
+                ws.send("P");
+            }, 5000);
+
             statReporter.html("Retrieving tickets...");
             //Retrieve projects
             $.ajax("/api/projects", {
@@ -337,6 +360,63 @@ function uploadNewBugAttachment(files) {
         let descriptor = fileDescriptors[index];
         descriptor.progressText.text("Done");
         descriptor.progress.hide();
+
+        fileBugAttachments.push(fileId);
+    }, function(index) {
+        let descriptor = fileDescriptors[index];
+        descriptor.progressText.text("Failed");
+        descriptor.progress.addClass("error");
+    });
+}
+
+
+function uploadNewCommentAttachment(files) {
+    let fileDescriptors = [];
+
+    for (let i = 0; i < files.length; i++) {
+        let file = files[i];
+
+        let wrapper = $("<div/>", {
+            class: "uploadObject"
+        }).appendTo($("#newCommentFileUploads"));
+        $("<span/>", {
+            text: file.name,
+        }).appendTo(wrapper);
+        let progressText = $("<span/>", {
+            text: "Starting upload...",
+            class: "uploadText"
+        }).appendTo(wrapper);
+        let progress = $("<div/>", {
+            class: "progressBar indeterminate"
+        }).appendTo(wrapper);
+        let progressTrack = $("<div/>", {
+            class: "progressBarTrack"
+        }).appendTo(progress);
+
+        fileDescriptors.push({
+            wrapper: wrapper,
+            progress: progress,
+            progressTrack: progressTrack,
+            progressText: progressText
+        });
+    }
+
+    uploadAttachments(files, function(index, done, total) {
+        let descriptor = fileDescriptors[index];
+        if (total == -1) {
+            descriptor.progress.addClass("indeterminate");
+            descriptor.progressText.text("Uploading...");
+        } else {
+            descriptor.progress.removeClass("indeterminate");
+            descriptor.progressTrack.css("width", done / total * 100 + "%");
+            descriptor.progressText.text(calculateSize(done) + " / " + calculateSize(total));
+        }
+    }, function(index, fileId) {
+        let descriptor = fileDescriptors[index];
+        descriptor.progressText.text("Done");
+        descriptor.progress.hide();
+
+        fileBugAttachments.push(fileId);
     }, function(index) {
         let descriptor = fileDescriptors[index];
         descriptor.progressText.text("Failed");
@@ -577,14 +657,39 @@ function loadBugs(projectName, bug = -1) {
     });
 }
 
+function insertAttachment(attachment, wrapper) {
+    if (attachment.type == "image/png" || attachment.type == "image/jpeg") {
+        let w = $("<a/>").attr("href", attachment.link)
+                 .attr("target", "_blank")
+                 .appendTo(wrapper);
+        $("<img/>").attr("src", attachment.link)
+                   .css("width", "calc(100% - 20px)")
+                   .appendTo(w);
+    } else {
+        let w = $("<div/>").appendTo(wrapper);
+        $("<img/>").attr("src", "/images/none.svg")
+                   .appendTo(w);
+        $("<a/>").text(attachment.displayName)
+                 .attr("href", attachment.link)
+                 .attr("target", "_blank")
+                 .appendTo(w);
+        $("<span/>").text(calculateSize(attachment.size))
+                    .appendTo(w);
+    }
+}
+
 function loadBug(projectName, id) {
     currentBug = -1;
+    fileBugAttachments = [];
+
     $("#bugLoader").css("display", "flex");
     $("#bugBodyWrapper").hide();
     $("#bugTop").hide();
     $("#bugComments").empty();
     $("#bugInfo").addClass("details");
     $("#commentsWrapper").hide();
+    $("#bugAttachments").empty();
+    $("#newCommentFileUploads").empty();
 
     ws.send("UPDATES PROJECT " + projectName);
     ws.send("UPDATES BUG " + id);
@@ -603,6 +708,11 @@ function loadBug(projectName, id) {
             } else {
                 $("#bugOpen").removeClass();
                 $("#bugOpen").addClass("bugClosed");
+            }
+
+            for (let key in data.attachments) {
+                let attachment = data.attachments[key];
+                insertAttachment(attachment, "#bugAttachments");
             }
 
             document.title = data.title + " - " + currentProject + " - " + stdtitle;
@@ -969,6 +1079,7 @@ function doFileBug() {
     let bugPayload = {
         title: title,
         body: body,
+        attachments: fileBugAttachments,
         importance: parseInt($("#newBugImportance").val()),
         private: $("#privateBug").prop("checked")
     }
@@ -1042,7 +1153,8 @@ function sendComment() {
 
         //Write Comment
         let commentPayload = {
-            body: $("#commentText").val()
+            body: $("#commentText").val(),
+            attachments: fileBugAttachments
         };
 
         let pendingCommentDescriptor = {
@@ -1079,6 +1191,9 @@ function sendComment() {
             },
             data: JSON.stringify(commentPayload) + "\r\n\r\n"
         });
+        
+        fileBugAttachments = [];
+        $("#newCommentFileUploads").empty();
     }
 }
 
@@ -1179,6 +1294,13 @@ function editComment(wrapper, comment) {
             html: filterCommentContents(comment.body)
         }).appendTo(wrapper);
 
+        
+        let attachments = $("<div/>").addClass("attachments").appendTo(wrapper);
+        for (let key in comment.attachments) {
+            let attachment = comment.attachments[key];
+            insertAttachment(attachment, attachments);
+        }
+
         let metadata = $("<div/>", {
             class: "bugBodyMetadata"
         }).appendTo(wrapper);
@@ -1192,6 +1314,7 @@ function editComment(wrapper, comment) {
         let author = $("<span/>", {
             text: "..."
         }).appendTo(metadata);
+
 
         if (comment.sending) {
             wrapper.addClass("disabled");
@@ -1334,6 +1457,10 @@ function ratelimit(resetHeader) {
 function uploadAttachments(files, progress, done, error) {
     for (let i = 0; i < files.length; i++) {
         let file = files[i];
+        
+        let data = new FormData();
+        data.append("file", file);
+        
         $.ajax({
             xhr: function() {
                 var xhr = new window.XMLHttpRequest();
@@ -1348,14 +1475,14 @@ function uploadAttachments(files, progress, done, error) {
 
                 return xhr;
             },
-            url: "/api/files/upload",
+            url: "/api/attachments",
             type: "POST",
-            data: file,
+            data: data,
             cache: false,
             contentType: false,
             processData: false,
             success: function(data, status, jqXHR) {
-                done(i);
+                done(i, data[0].id);
             },
             error: function(jxXHR, status, err) {
                 error(i);
@@ -1363,7 +1490,6 @@ function uploadAttachments(files, progress, done, error) {
             beforeSend: function (xhr) {
                 let token = localStorage.getItem("token");
                 xhr.setRequestHeader("Authorization", token);
-                xhr.setRequestHeader("FileName", file.name);
             }
         });
     }
