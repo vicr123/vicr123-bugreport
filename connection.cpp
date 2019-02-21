@@ -92,7 +92,7 @@ void Response::WriteToConnection(Connection *connection, QString path) const {
         if (connection->getRequest().headers.contains("Accept-Encoding") && connection->getRequest().path != "/api/socket") {
             QString encoding = connection->getRequest().headers.value("Accept-Encoding");
             QStringList acceptedEncoding = encoding.split(", ");
-            if (acceptedEncoding.contains("gzip")) {
+            if (acceptedEncoding.contains("gzip") && statusCode / 100 != 3) {
                 //Compress body with gzip
                 dataOut = gzip(dataOut);
                 headersOut.insert("Content-Length", QString::number(dataOut.length()));
@@ -262,68 +262,78 @@ void Request::processCompletedRequest() {
     }
 
     if (path.endsWith("/")) {
-        Response rdr;
-        rdr.statusCode = 303;
-        rdr.headers.insert("Location", path + "index.html");
-        rdr.allowEmptyContents = true;
-
-        if (isHead) {
-            method = "HEAD";
-            rdr.contents.clear();
+        if (path.startsWith("/app/")) {
+            // Serve index page for dynamic URL
+            path = "/app/index.html";
+        } else {
+            Response rdr;
+            rdr.statusCode = 301;
+            rdr.headers.insert("Location", path + "index.html");
             rdr.allowEmptyContents = true;
-        }
-
-        rdr.WriteToConnection(connection, path);
-        return;
-    } else {
-        if (path.contains('?')) {
-            path = path.left(path.indexOf("?"));
-        }
-
-        QFile file(rootPath + path);
-        if (!file.exists()) {
-            Response err;
-            err.statusCode = 404;
-            err.WriteToConnection(connection, path);
 
             if (isHead) {
                 method = "HEAD";
-                err.contents.clear();
-                err.allowEmptyContents = true;
+                rdr.contents.clear();
+                rdr.allowEmptyContents = true;
             }
 
+            rdr.WriteToConnection(connection, path);
             return;
         }
+    }
 
-        file.open(QFile::ReadOnly);
-        QByteArray buffer = file.readAll();
-        file.close();
+    if (path.contains('?')) {
+        path = path.left(path.indexOf("?"));
+    }
 
-        QMimeDatabase mimeDb;
-        QMimeType mimetype = mimeDb.mimeTypeForFileNameAndData(file.fileName(), buffer);
-
-        Response resp;
-        resp.statusCode = 200;
-        resp.contents = buffer;
-        resp.headers.insert("Content-Type", mimetype.name());
+    QFileInfo fileInfo(rootPath + path);
+    if (!fileInfo.absolutePath().contains(rootPath)) {
+        Response err;
+        err.statusCode = 400;
+        err.WriteToConnection(connection, path);
 
         if (isHead) {
             method = "HEAD";
-            resp.contents.clear();
-            resp.allowEmptyContents = true;
+            err.contents.clear();
+            err.allowEmptyContents = true;
         }
 
-        resp.WriteToConnection(connection, path);
         return;
     }
-    Response err;
-    err.statusCode = 500;
+
+    QFile file(rootPath + path);
+    if (!file.exists()) {
+        Response err;
+        err.statusCode = 404;
+        err.WriteToConnection(connection, path);
+
+        if (isHead) {
+            method = "HEAD";
+            err.contents.clear();
+            err.allowEmptyContents = true;
+        }
+
+        return;
+    }
+
+    file.open(QFile::ReadOnly);
+    QByteArray buffer = file.readAll();
+    file.close();
+
+    QMimeDatabase mimeDb;
+    QMimeType mimetype = mimeDb.mimeTypeForFileNameAndData(file.fileName(), buffer);
+
+    Response resp;
+    resp.statusCode = 200;
+    resp.contents = buffer;
+    resp.headers.insert("Content-Type", mimetype.name());
 
     if (isHead) {
         method = "HEAD";
-        err.contents.clear();
-        err.allowEmptyContents = true;
+        resp.contents.clear();
+        resp.allowEmptyContents = true;
     }
 
-    err.WriteToConnection(connection, path);
+    resp.WriteToConnection(connection, path);
+    return;
 }
