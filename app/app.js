@@ -67,7 +67,7 @@ let mouseX, mouseY;
 }
 
 console.log("%cWARNING", "color: yellow; font-size: xx-large");
-console.log("This console can change the indended behaviour of the bug reporting tool. Unless you know what you're doing, don't enter any commands here. They could be sending user account information to an attacker.");
+console.log("This console can change the intended behaviour of the bug reporting tool. Unless you know what you're doing, don't enter any commands here. They could be sending user account information to an attacker.");
 
 function load() {
     try {

@@ -179,8 +179,8 @@ div.content {
 }
 
 div.content * {
-    padding-bottom: 0px;
-    padding-top: 0px;
+    /* padding-bottom: 0px; */
+    /* padding-top: 0px; */
     margin: 0px;
     vertical-align: bottom;
 }
@@ -797,6 +797,11 @@ p.error {
     color: rgb(255, 50, 50);
 }
 
+.dialog > * {
+    margin-top: 3px !important;
+    margin-bottom: 3px !important;
+}
+
 @media (max-width: 900px) {
     div.list .parentButton {
         display: flex;
@@ -804,6 +809,11 @@ p.error {
 
     div.content > div {
         display: none;
+    }
+
+
+    div.newBug.show {
+        display: flex;
     }
 
     div.content.projects #projects {
