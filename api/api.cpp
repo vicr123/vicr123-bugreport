@@ -1092,6 +1092,7 @@ Response Api::processPath(Request req) {
                 obj.insert("email", q.value("email").toString());
                 obj.insert("picture", getPictureUrl(q.value("email").toString()));
                 obj.insert("isAdmin", q.value("isAdmin").toBool());
+                obj.insert("isVerified", q.value("verified").toBool());
 
                 rsp.statusCode = 200;
                 rsp.headers.insert("Content-Type", "text/json; charset=utf-8");
