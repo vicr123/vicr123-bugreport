@@ -365,6 +365,7 @@ function uploadNewBugAttachment(files) {
     }, function(index) {
         let descriptor = fileDescriptors[index];
         descriptor.progressText.text("Failed");
+        descriptor.progress.removeClass("indeterminate");
         descriptor.progress.addClass("error");
     });
 }
@@ -420,6 +421,7 @@ function uploadNewCommentAttachment(files) {
     }, function(index) {
         let descriptor = fileDescriptors[index];
         descriptor.progressText.text("Failed");
+        descriptor.progress.removeClass("indeterminate");
         descriptor.progress.addClass("error");
     });
 }
@@ -1157,7 +1159,6 @@ function sendComment() {
     if (!loggedIn) {
         showDialog("dlgLoginRequired");
     } else {
-
         //Write Comment
         let commentPayload = {
             body: $("#commentText").val(),
@@ -1462,43 +1463,50 @@ function ratelimit(resetHeader) {
 }
 
 function uploadAttachments(files, progress, done, error) {
-    for (let i = 0; i < files.length; i++) {
-        let file = files[i];
-        
-        let data = new FormData();
-        data.append("file", file);
-        
-        $.ajax({
-            xhr: function() {
-                var xhr = new window.XMLHttpRequest();
+    if (!loggedIn) {
+        showDialog("dlgLoginRequired");
+        for (let i = 0; i < files.length; i++) {
+            error(i);
+        }
+    } else {
+        for (let i = 0; i < files.length; i++) {
+            let file = files[i];
+            
+            let data = new FormData();
+            data.append("file", file);
+            
+            $.ajax({
+                xhr: function() {
+                    var xhr = new window.XMLHttpRequest();
 
-                xhr.upload.addEventListener("progress", function(evt) {
-                    if (evt.lengthComputable) {
-                        progress(i, evt.loaded, evt.total);
-                    } else {
-                        progress(0, -1);
-                    }
-                }, false);
+                    xhr.upload.addEventListener("progress", function(evt) {
+                        if (evt.lengthComputable) {
+                            progress(i, evt.loaded, evt.total);
+                        } else {
+                            progress(0, -1);
+                        }
+                    }, false);
 
-                return xhr;
-            },
-            url: "/api/attachments",
-            type: "POST",
-            data: data,
-            cache: false,
-            contentType: false,
-            processData: false,
-            success: function(data, status, jqXHR) {
-                done(i, data[0].id);
-            },
-            error: function(jxXHR, status, err) {
-                error(i);
-            },
-            beforeSend: function (xhr) {
-                let token = localStorage.getItem("token");
-                xhr.setRequestHeader("Authorization", token);
-            }
-        });
+                    return xhr;
+                },
+                url: "/api/attachments",
+                type: "POST",
+                data: data,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(data, status, jqXHR) {
+                    done(i, data[0].id);
+                },
+                error: function(jxXHR, status, err) {
+                    error(i);
+                },
+                beforeSend: function (xhr) {
+                    let token = localStorage.getItem("token");
+                    xhr.setRequestHeader("Authorization", token);
+                }
+            });
+        }
     }
 }
 

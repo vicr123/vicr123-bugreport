@@ -767,7 +767,7 @@ div.progressBarTrack {
 
     top: 0px;
     height: 100%;
-    margin: 0px;
+    margin: 0px !important;
     position: relative;
 }
 
