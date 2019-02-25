@@ -33,6 +33,9 @@
                 <div class="headerItem" id="userSettings" onclick="userSettings()">
                     Log In
                 </div>
+                <div class="headerItem" id="verificationNeeded" onclick="showDialog('dlgVerificationNeeded')">
+                    Email Verification Needed
+                </div>
             </div>
         </div>
         
@@ -288,7 +291,7 @@
                 <li>Your comments and existing tickets will not be deleted</li>
             </ul>
             <p>If you're sure you want to delete your account, enter your password below to confirm that it's you.</p>
-            <input type="password" id="deleteAccountPassword" style="width: 100%;"/>
+            <input type="password" id="deleteAccountPassword" autocomplete="new-password" style="width: 100%;"/>
             <span class="error" id="deleteAccountError">That didn't work. Try entering your password again.</span>
             <p style="font-weight: bold;">WARNING: This is the final step. Your account will be deleted after you click "Delete my account."</p>
             <div class="buttonBar">
@@ -315,6 +318,16 @@
             <h1>You are being rate limited</h1>
             <p>Your rate limit resets on <span id="ratelimitReset"></span>.</p>
             <p>Reload the page after that time to continue using the bugtracker.</p>
+        </div>
+        <div class="dialog" id="dlgVerificationNeeded">
+            <img src="/images/dialog-warning.svg" class="icon" />
+            <h1>Your email needs to be verified.</h1>
+            <p>You won't be able to receive any emails from the bug tracker while your email is not verified.</p>
+            <p>To verify your email, find the verification link in your inbox. If you can't find it, you may want to check your spam folder.</p>
+            <p>If you need the link resent, please send an email to <a href="mailto:hello@vicr123.com">hello@vicr123.com</a>.</p>
+            <div class="buttonBar">
+                <a href="#" class="button" onclick="dismissDialog('dlgVerificationNeeded');">OK</a>
+            </div>
         </div>
         
         <script>

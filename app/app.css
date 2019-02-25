@@ -127,6 +127,11 @@ div#headerloader {
     animation: spin 1s linear infinite;
 }
 
+div.headerItem#verificationNeeded {
+    color: rgb(255, 150, 0);
+    display: none;
+}
+
 div.toast {
     border-top: 1px solid var(--fg-color);
     height: 49px;

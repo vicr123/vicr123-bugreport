@@ -931,6 +931,7 @@ function reloadLoginState() {
         isAdmin = false;
         ws.send("DEAUTHENTICATE");
         $("body").removeClass("adminMode");
+        $("#verificationNeeded").css("display", "none");
         resolve();
     } else {
         //Retrieve user settings
@@ -941,6 +942,12 @@ function reloadLoginState() {
                 loggedIn = true;
                 loginData = data;
                 isAdmin = data.isAdmin;
+                
+                if (data.isVerified) {
+                    $("#verificationNeeded").css("display", "none");
+                } else {
+                    $("#verificationNeeded").css("display", "block");
+                }
 
                 ws.send("AUTHENTICATE " + token);
                 if (isAdmin) {
