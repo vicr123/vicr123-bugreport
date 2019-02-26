@@ -2,6 +2,8 @@
 $.i18n().load({
     "en": "/i18n/en.json",
     "vi": "/i18n/vi.json"
+}).then(function() {
+    retranslate();
 });
 
 let locale = localStorage.getItem("locale");
