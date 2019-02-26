@@ -7,6 +7,17 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        
+        <script src="/jquery.i18n/libs/CLDRPluralRuleParser/src/CLDRPluralRuleParser.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.messagestore.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.fallbacks.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.language.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.parser.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.emitter.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.emitter.bidi.js"></script>
+        <script src="/i18n/i18n.js"></script>
+        
         <script>if (window.module) module = window.module;</script>
         <script src="/contemporary.js"></script>
         <script src="login.js"></script>
@@ -15,62 +26,62 @@
     </head>
     <body style="margin: 0px;">
         <div class="screen login" id="login">
-            <h1>Log In</h1>
-            <p>Log in to the bugtracker using your username and password.</p>
+            <h1 data-i18n="log-in">Log In</h1>
+            <p data-i18n="login-prompt">Log in to the bugtracker using your username and password.</p>
             <input type="text" placeholder="Username" id="username" spellcheck="false" autocomplete="off"/>
             <input type="password" placeholder="Password" id="password"/>
-            <span class="error" id="error">That didn't work. Check your email and password and enter it again.</span>
+            <span class="error" id="error" data-i18n="login-error">That didn't work. Check your email and password and enter it again.</span>
             <div class="spacer"></div>
 
             <div class="buttonBar">
-                <a href="#" class="button" onclick="register()">Register for an account</a>
+                <a href="#" class="button" onclick="register()" data-i18n="register-account">Register for an account</a>
                 <span class="spacer"></span>
                 <!--<div class="g-signin2" data-onsuccess="onSignIn"></div>-->
                 <span class="spacer"></span>
-                <a href="#" class="button" onclick="resetView()">Cancel</a>
-                <a href="#" class="button" onclick="attemptLogin()">Log In</a>
+                <a href="#" class="button" onclick="resetView()" data-i18n="cancel">Cancel</a>
+                <a href="#" class="button" onclick="attemptLogin()" data-i18n="log-in">Log In</a>
             </div>
         </div>
         <div class="screen 2fa" id="2fa">
-            <h1>Two Factor Authentication</h1>
-            <p>Obtain a verification code to verify your identity by opening the Two Factor Authentication app on your phone.</p>
+            <h1 data-i18n="2fa">Two Factor Authentication</h1>
+            <p data-i18n="2fa-auth-prompt">Obtain a verification code to verify your identity by opening the Two Factor Authentication app on your phone.</p>
             <input type="tel" pattern="[0-9 ]*" placeholder="Two Factor Authentication Code" id="totpCode"/>
-            <span class="error" id="totpError">That didn't work. Check your code and enter it again.</span>
+            <span class="error" id="totpError" data-i18n="2fa-error">That didn't work. Check your code and enter it again.</span>
             <div class="spacer"></div>
 
             <div class="buttonBar">
                 <span class="spacer"></span>
-                <a href="#" class="button" onclick="resetView()">Cancel</a>
-                <a href="#" class="button" onclick="attemptTotpLogin()">Log In</a>
+                <a href="#" class="button" onclick="resetView()" data-i18n="cancel">Cancel</a>
+                <a href="#" class="button" onclick="attemptTotpLogin()" data-i18n="log-in">Log In</a>
             </div>
         </div>
         <div class="screen register" id="register">
-            <h1>Register for an account</h1>
-            <p>Register to make comments and report on bugs.</p>
+            <h1 data-i18n="register-account">Register for an account</h1>
+            <p data-i18n="register-explanation">Register to make comments and report on bugs.</p>
             <input type="email" type="email" placeholder="Email" id="regemail" spellcheck="false" autocomplete="off"/>
             <input type="text" placeholder="Username" id="regusername" spellcheck="false" autocomplete="off"/>
             <input type="password" placeholder="Password" id="regpassword"/>
             <input type="password" placeholder="Confirm Password" id="regpasswordconfirm"/>
             <div><input type="checkbox" id="terms"/><label for="terms" class="checkbox"><span>I agree to the <a href="#" onclick="openTerms();">Terms and Conditions</a></span></label></div>
-            <span class="error" id="regTerms">You'll need to agree to the terms and conditions.</span>
-            <span class="error" id="regPasswordError">These passwords don't match.</span>
-            <span class="error" id="regFieldError">All fields are required.</span>
-            <span class="error" id="regUsernameError">The username is already used.</span>
-            <span class="error" id="regEmailError">The email is already used.</span>
-            <span class="error" id="regEmailValidityError">The email address is invalid.</span>
-            <span class="error" id="regServerError">Server Error.</span>
+            <span class="error" id="regTerms" data-i18n="register-error-tc">You'll need to agree to the terms and conditions.</span>
+            <span class="error" id="regPasswordError" data-i18n="register-error-password">These passwords don't match.</span>
+            <span class="error" id="regFieldError" data-i18n="register-error-fields">All fields are required.</span>
+            <span class="error" id="regUsernameError" data-i18n="register-error-username">The username is already used.</span>
+            <span class="error" id="regEmailError" data-i18n="register-error-email">The email is already used.</span>
+            <span class="error" id="regEmailValidityError" data-i18n="register-error-invalid-email">The email address is invalid.</span>
+            <span class="error" id="regServerError" data-i18n="register-error-server">Server Error.</span>
             <div class="spacer"></div>
             
             <div class="buttonBar">
                 <span class="spacer"></span>
-                <a href="#" class="button" onclick="resetView()">Cancel</a>
-                <a href="#" class="button" onclick="attemptRegister()">Register</a>
+                <a href="#" class="button" onclick="resetView()" data-i18n="cancel">Cancel</a>
+                <a href="#" class="button" onclick="attemptRegister()" data-i18n="register">Register</a>
             </div>
         </div>
         <div class="screen" id="terms">
             <div id="termsBox"></div>
             <div class="buttonBar terms">
-                <a href="#" class="button" onclick="$('#terms').hide();$('#register').show();">Done</a>
+                <a href="#" class="button" onclick="$('#terms').hide();$('#register').show();" data-i18n="done">Done</a>
             </div>
         </div>
         <div class="coverLoader" id="coverLoader">

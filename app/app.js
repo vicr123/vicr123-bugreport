@@ -68,9 +68,10 @@ let mouseX, mouseY;
 
 console.log("%cWARNING", "color: yellow; font-size: xx-large");
 console.log("This console can change the intended behaviour of the bug reporting tool. Unless you know what you're doing, don't enter any commands here. They could be sending user account information to an attacker.");
-
+    
 function load() {
     try {
+        retranslate();
         if (window.showdown == undefined) {
             throw new Error("Showdown not loaded");
         }
@@ -125,7 +126,7 @@ function load() {
         });
 
         let statReporter = $("#loadingStatus");
-        statReporter.html("Connecting to the server...");
+        statReporter.html($.i18n("connection-connecting"));
 
         $.ajaxSetup({
             beforeSend: function (xhr) {
@@ -182,6 +183,15 @@ function load() {
                 }
             }
         });
+        
+        $("#languageSelect").val($.i18n().locale.substr(0, 2));
+        
+        $("#languageSelect").change(function(event) {
+            let newLocale = $("#languageSelect option:selected").val();
+            localStorage.setItem("locale", newLocale);
+            $.i18n().locale = newLocale;
+            retranslate();
+        });
 
 
         //Connect to WebSockets
@@ -192,7 +202,7 @@ function load() {
                 ws.send("P");
             }, 5000);
 
-            statReporter.html("Retrieving tickets...");
+            statReporter.html($.i18n("connection-retrieving"));
             //Retrieve projects
             $.ajax("/api/projects", {
                 success: function(data, status, jqXHR) {
@@ -210,7 +220,7 @@ function load() {
                         }
                     }
 
-                    statReporter.html("Logging in...");
+                    statReporter.html($.i18n("connection-logging-in"));
                     reloadLoginState().then(function() {
                         $("#initialLanding").addClass("hide");
                         $("#headerButtons").addClass("show");
@@ -219,8 +229,8 @@ function load() {
                         });
 
                         if (getParameterByName("validated") == "true" && loggedIn) {
-                            $("#genericOkWarningTitle").html("Validation");
-                            $("#genericOkWarningText").html("Thanks, your email is now validated.");
+                            $("#genericOkWarningTitle").html($.i18n("email-validation-complete"));
+                            $("#genericOkWarningText").html($.i18n("email-validation-complete-description"));
                             showDialog("dlgGenericOkWarning")
                         }
                     }).catch(function() {
@@ -315,6 +325,14 @@ function connectWs() {
     return ws;
 }
 
+function retranslatePage() {
+    $("#commentText").attr("placeholder", $.i18n("comment-prompt"));
+    $("#editCommentText").attr("placeholder", $.i18n("comment-prompt"));
+    $("#newBugTitle").attr("placeholder", $.i18n("ticket-title"));
+    $("#newBugContent").attr("placeholder", $.i18n("ticket-description"));
+    $("#verificationNeededEmail").text($.i18n("verification-needed-3", "<a href=\"mailto:hello@vicr123.com\">hello@vicr123.com</a>"));
+}
+
 function uploadNewBugAttachment(files) {
     let fileDescriptors = [];
 
@@ -350,7 +368,7 @@ function uploadNewBugAttachment(files) {
         let descriptor = fileDescriptors[index];
         if (total == -1) {
             descriptor.progress.addClass("indeterminate");
-            descriptor.progressText.text("Uploading...");
+            descriptor.progressText.text($.i18n("uploading"));
         } else {
             descriptor.progress.removeClass("indeterminate");
             descriptor.progressTrack.css("width", done / total * 100 + "%");
@@ -358,13 +376,13 @@ function uploadNewBugAttachment(files) {
         }
     }, function(index, fileId) {
         let descriptor = fileDescriptors[index];
-        descriptor.progressText.text("Done");
+        descriptor.progressText.text($.i18n("done"));
         descriptor.progress.hide();
 
         fileBugAttachments.push(fileId);
     }, function(index) {
         let descriptor = fileDescriptors[index];
-        descriptor.progressText.text("Failed");
+        descriptor.progressText.text($.i18n("failed"));
         descriptor.progress.removeClass("indeterminate");
         descriptor.progress.addClass("error");
     });
@@ -406,7 +424,7 @@ function uploadNewCommentAttachment(files) {
         let descriptor = fileDescriptors[index];
         if (total == -1) {
             descriptor.progress.addClass("indeterminate");
-            descriptor.progressText.text("Uploading...");
+            descriptor.progressText.text($.i18n("uploading"));
         } else {
             descriptor.progress.removeClass("indeterminate");
             descriptor.progressTrack.css("width", done / total * 100 + "%");
@@ -414,13 +432,13 @@ function uploadNewCommentAttachment(files) {
         }
     }, function(index, fileId) {
         let descriptor = fileDescriptors[index];
-        descriptor.progressText.text("Done");
+        descriptor.progressText.text($.i18n("done"));
         descriptor.progress.hide();
 
         fileBugAttachments.push(fileId);
     }, function(index) {
         let descriptor = fileDescriptors[index];
-        descriptor.progressText.text("Failed");
+        descriptor.progressText.text($.i18n("failed"));
         descriptor.progress.removeClass("indeterminate");
         descriptor.progress.addClass("error");
     });
@@ -638,11 +656,11 @@ function loadBugs(projectName, bug = -1) {
                 return;
             }
 
-            toast("Error", "Couldn't load tickets for project " + projectName + ".", [
+            toast($.i18n("error"), $.i18n("error-project", projectName), [
                 {
-                    text: "More Info",
+                    text: $.i18n("more-info"),
                     onclick: function() {
-                        $("#genericOkWarningTitle").html("Error Details");
+                        $("#genericOkWarningTitle").html($.i18n("error-details"));
                         $("#genericOkWarningText").html(err);
                         showDialog("dlgGenericOkWarning")
                     }
@@ -749,7 +767,7 @@ function loadBug(projectName, id) {
                 $("#bugReporter").text(user.username);
                 $("#bugProfilePicture").attr("src", user.picture + "&s=16");
             }).catch(function(err) {
-                $("#bugReporter").text("Deleted Account");
+                $("#bugReporter").text($.i18n("deleted-account"));
             });
             currentBug = data.id;
 
@@ -804,11 +822,11 @@ function loadBug(projectName, id) {
                 return;
             }
 
-            toast("Error", "Couldn't load ticket " + id + " for project " + projectName + ".", [
+            toast($.i18n("error"), $.i18n("error-ticket", id, projectName), [
                 {
                     text: "More Info",
                     onclick: function() {
-                        $("#genericOkWarningTitle").html("Error Details");
+                        $("#genericOkWarningTitle").html($.i18n("error-details"));
                         $("#genericOkWarningText").html(err);
                         showDialog("dlgGenericOkWarning")
                     }
@@ -840,7 +858,7 @@ function loadPage(project, bug) {
     loadBugs(project, bug);
     currentProject = project;
     currentBug = bug;
-    $("#newBugProjectName").text(project);
+    $("#newBugProjectName").text($.i18n("new-bug-title", project));
 
     if (bug == -1) {
         $("#contentContainer").removeClass("projects");
@@ -858,8 +876,8 @@ function fileBug() {
     if (!loggedIn) {
         showDialog("dlgLoginRequired");
     } else if (currentProject == "") {
-        $("#genericOkWarningTitle").html("Select Project");
-        $("#genericOkWarningText").html("To start filing a ticket, go ahead and select the project it should be filed under.");
+        $("#genericOkWarningTitle").html($.i18n("select-project"));
+        $("#genericOkWarningText").html($.i18n("select-project-description"));
         showDialog("dlgGenericOkWarning")
     } else {
         $("#newBug").addClass("show");
@@ -929,7 +947,7 @@ function reloadLoginState() {
     let token = localStorage.getItem("token");
     if (token == null || token == "null") { //Logged Out
         loggedIn = false;
-        $("#userSettings").text("Log In");
+        $("#userSettings").text($.i18n("log-in"));
         isAdmin = false;
         ws.send("DEAUTHENTICATE");
         $("body").removeClass("adminMode");
@@ -940,7 +958,7 @@ function reloadLoginState() {
         $.ajax("/api/users/me", {
             success: function(data, status, jqXHR) {
                 $("#userSettings").text(data.username);
-                $("#userManagementUsername").text(data.username);
+                $("#userManagementUsername").text($.i18n("user-management-description", data.username));
                 loggedIn = true;
                 loginData = data;
                 isAdmin = data.isAdmin;
@@ -969,11 +987,11 @@ function reloadLoginState() {
                 ws.send("DEAUTHENTICATE");
                 localStorage.setItem("token", null);
 
-                $("#genericOkWarningTitle").html("Login Error");
-                $("#genericOkWarningText").html("We couldn't log you in. Try logging in again.");
+                $("#genericOkWarningTitle").html($.i18n("login-error"));
+                $("#genericOkWarningText").html($.i18n("login-error-description"));
                 showDialog("dlgGenericOkWarning")
 
-                $("#userSettings").text("Log In");
+                $("#userSettings").text($.i18n("log-in"));
                 loggedIn = false;
                 reject();
             },
@@ -1326,10 +1344,10 @@ function editComment(wrapper, comment) {
 
         if (comment.sending) {
             wrapper.addClass("disabled");
-            author.text("Sending...");
+            author.text($.i18n("sending"));
         } else if (comment.error) {
             wrapper.addClass("error");
-            author.text("Couldn't send comment");
+            author.text($.i18n("send-error"));
 
             metadata.append(" &bullet; ");
 
@@ -1352,7 +1370,7 @@ function editComment(wrapper, comment) {
                 
                 profile.attr("src", user.picture + "&s=32");
             }).catch(function(err) {
-                author.text("Deleted Account");
+                author.text($.i18n("deleted-account"));
             });
         }
 
@@ -1458,7 +1476,7 @@ function appendCommentToUi(comment) {
 function ratelimit(resetHeader) {
     let date = new Date(0);
     date.setUTCSeconds(resetHeader);
-    $("#ratelimitReset").text(date.toString());
+    $("#ratelimitReset").text($.i18n("rate-limit-reset", date.toString()));
     showDialog("dlgRatelimit");
 }
 

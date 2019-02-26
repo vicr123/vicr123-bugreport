@@ -11,6 +11,17 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
         <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    
+        <script src="/jquery.i18n/libs/CLDRPluralRuleParser/src/CLDRPluralRuleParser.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.messagestore.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.fallbacks.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.language.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.parser.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.emitter.js"></script>
+        <script src="/jquery.i18n/src/jquery.i18n.emitter.bidi.js"></script>
+        <script src="/i18n/i18n.js"></script>
+        
         <script>if (window.module) module = window.module;</script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.7.6/showdown.min.js"></script>
         <script src="/app/xss.js" type="text/javascript"></script>
@@ -23,26 +34,29 @@
         <div class="mainHeader" id="mainHeader">
             <div class="headerProject">
                 <img class="smileIcon" src="/images/smile.png">
-                <div class="headerTitle">Bug Reporting</div>
+                <div class="headerTitle" data-i18n="bug-reporting">Bug Reporting</div>
                 <span class="admin">Administrator</span>
             </div>
             <div id="headerButtons" class="headerButtons">
-                <div class="headerItem" onclick="fileBug()">
+                <div class="headerItem" data-i18n="settings" onclick="showDialog('dlgSettings')">
+                    Settings
+                </div>
+                <div class="headerItem" data-i18n="file-new-ticket" onclick="fileBug()">
                     File New Ticket
                 </div>
-                <div class="headerItem" id="userSettings" onclick="userSettings()">
+                <div class="headerItem" id="userSettings" onclick="userSettings()" data-i18n="log-in">
                     Log In
                 </div>
-                <div class="headerItem" id="verificationNeeded" onclick="showDialog('dlgVerificationNeeded')">
+                <div class="headerItem" id="verificationNeeded" onclick="showDialog('dlgVerificationNeeded')" data-i18n="email-verification-needed">
                     Email Verification Needed
                 </div>
             </div>
         </div>
         
         <div class="landing" id="initialLanding">
-            <h1>Bug Reporting</h1>
+            <h1 data-i18n="bug-reporting">Bug Reporting</h1>
             <div class="loader"></div>
-            <p id="loadingStatus">Loading assets...</p>
+            <p id="loadingStatus" data-i18n="loading-assets">Loading assets...</p>
         </div>
         <div class="content projects" id="contentContainer">
             <div id="projects" class="list">
@@ -55,11 +69,11 @@
             </div>
             <div id="bugInfo" class="panel">
                 <div id="bugCover">
-                    <h1>Welcome!</h1>
+                    <h1 data-i18n="welcome">Welcome!</h1>
                     <img src="/images/landing.svg" />
-                    <p>Browse tickets using the list on the left.</p>
+                    <p data-i18n="browse-prompt">Browse tickets using the list on the left.</p>
                     <div class="buttonBar">
-                        <a href="#" class="button" onclick="fileBug()">File New Ticket</a>
+                        <a href="#" class="button" onclick="fileBug()" data-i18n="file-new-ticket" >File New Ticket</a>
                     </div>
                 </div>
                 <div class="bugTitleWrapper">
@@ -74,11 +88,11 @@
                                 <table>
                                     <tbody>
                                         <tr>
-                                            <th>Importance</th>
+                                            <th data-i18n="importance">Importance</th>
                                             <td id="bugImportance"></td>
                                         </tr>
                                         <tr>
-                                            <th>Status</th>
+                                            <th data-i18n="status">Status</th>
                                             <td id="bugOpen"></td>
                                         </tr>
                                     </tbody>
@@ -103,17 +117,17 @@
                         <div id="commentsBox">
                             <input type="file" id="commentsFileUploader" multiple style="display: none" onchange="uploadNewCommentAttachment(this.files)"/>
                             <div class="dropTarget" id="commentsDropTarget">
-                                <h1>Drop files</h1>
-                                <p>Drop files here to attach them to this comment</p>
+                                <h1 data-i18n="drop-files">Drop files</h1>
+                                <p data-i18n="drop-files-prompt">Drop files here to attach them to this comment</p>
                             </div>
                             <textarea class="autogrow" id="commentText" placeholder="Write a comment..."></textarea>
                         </div>
                         <div id="bugActions">
-                            <a class="button flat commentButton" onclick="patchCurrentBug({isOpen: false})" id="btnCloseBug"><img src="/images/dialog-ok.svg" />Close</a>
-                            <a class="button flat commentButton" onclick="patchCurrentBug({isOpen: true})" id="btnReopenBug"><img src="/images/start-over.svg" />Reopen</a>
+                            <a class="button flat commentButton" onclick="patchCurrentBug({isOpen: false})" id="btnCloseBug"><img src="/images/dialog-ok.svg" /><span data-i18n="close">Close</span></a>
+                            <a class="button flat commentButton" onclick="patchCurrentBug({isOpen: true})" id="btnReopenBug"><img src="/images/start-over.svg"/><span data-i18n="reopen">Reopen</span></a>
                             <span class="spacer"></span>
                                 <a href="#" class="flat button" onclick="document.getElementById('commentsFileUploader').click();"><img src="/images/mail-attachment.svg" alt="Attach File"/></a>
-                                <a class="button" onclick="sendComment()" /><img src="/images/mail-send.svg" />Send</a>
+                                <a class="button" onclick="sendComment()" /><img src="/images/mail-send.svg"/><span data-i18n="send">Send</span></a>
                         </div>
                     </div>
                     <div class="uploads" id="newCommentFileUploads">
@@ -123,54 +137,54 @@
         
         <div class="newBug" id="newBug">
             <div class="dropTarget" id="newBugDropTarget">
-                <h1>Drop files</h1>
-                <p>Drop files here to attach them to this ticket</p>
+                <h1 data-i18n="drop-files">Drop files</h1>
+                <p data-i18n="drop-files-prompt">Drop files here to attach them to this ticket</p>
             </div>
-            <h1>File a new ticket in <span id="newBugProjectName"></span></h1>
+            <h1 id="newBugProjectName">File a new ticket in $1</h1>
             <input type="text" id="newBugTitle" placeholder="Ticket Title"/>
             <textarea id="newBugContent" placeholder="Describe what you think needs to be changed"></textarea>
             <a class="button list flat" id="bugSettingsButton" onclick="$('#newBugSettings').addClass('show');">
                 <div>
-                    <h3>More Settings</h3>
-                    <p>Importance, Visibility...</p>
+                    <h3 data-i18n="more-settings">More Settings</h3>
+                    <p data-i18n="more-settings-supplementary">Importance, Visibility...</p>
                 </div>
             </a>
             <input type="file" id="newBugFileUploader" multiple style="display: none" onchange="uploadNewBugAttachment(this.files)"/>
             <div class="uploads" id="newBugFileUploads">
             </div>
             <div class="buttonBar">
-                <a href="#" class="button" onclick="cancelFileBug()">Cancel</a>
+                <a href="#" class="button" onclick="cancelFileBug()" data-i18n="cancel">Cancel</a>
                 <span class="spacer"></span>
                 <a href="#" class="flat button" onclick="document.getElementById('newBugFileUploader').click();"><img src="/images/mail-attachment.svg" alt="Attach File"/></a>
-                <a href="#" class="button" onclick="doFileBug()">File Ticket</a>
+                <a href="#" class="button" onclick="doFileBug()" data-i18n="file-ticket">File Ticket</a>
             </div>
         </div>
         <div class="newBug" id="newBugSettings">
-            <h1>Extra Settings</h1>
-            <p>Set extra properties of this ticket</p>
+            <h1 data-i18n="extra-settings">Extra Settings</h1>
+            <p data-i18n="extra-settings-description">Set extra properties of this ticket</p>
             <div class="newBugSetting">
-                <h3>Importance</h3>
-                <p>How important is this ticket? Is it a feature request, or is it a grave security issue?</p>
+                <h3 data-i18n="importance">Importance</h3>
+                <p data-i18n="importance-description">How important is this ticket? Is it a feature request, or is it a grave security issue?</p>
                 <select id="newBugImportance">
-                    <option value="0">Fatal</option>
-                    <option value="1">Critical</option>
-                    <option value="2">High</option>
-                    <option value="3" selected>Normal</option>
-                    <option value="4">Low</option>
-                    <option value="5">Trivial</option>
-                    <option value="6">Feature Request</option>
+                    <option value="0" data-i18n="fatal">Fatal</option>
+                    <option value="1" data-i18n="critical">Critical</option>
+                    <option value="2" data-i18n="high">High</option>
+                    <option value="3" data-i18n="normal" selected>Normal</option>
+                    <option value="4" data-i18n="low">Low</option>
+                    <option value="5" data-i18n="trivial">Trivial</option>
+                    <option value="6" data-i18n="feature-request">Feature Request</option>
                 </select>
             </div>
             <div class="newBugSetting">
-                <h3>Privacy</h3>
-                <p>Does this ticket contain a security issue?</p>
-                <input type="radio" id="publicBug" name="newBugSecurity" checked/><label for="publicBug">Make Public</label>
-                <input type="radio" id="privateBug" name="newBugSecurity"/><label for="privateBug">Keep Private</label>
-                <p class="error">Only set this to "Keep Private" if you are reporting a security issue.</p>
+                <h3 data-i18n="privacy">Privacy</h3>
+                <p data-i18n="privacy-description">Does this ticket contain a security issue?</p>
+                <input type="radio" id="publicBug" name="newBugSecurity" checked/><label for="publicBug" data-i18n="privacy-public">Make Public</label>
+                <input type="radio" id="privateBug" name="newBugSecurity"/><label for="privateBug" data-i18n="privacy-private">Keep Private</label>
+                <p class="error" data-i18n="privacy-warning">Only set this to "Keep Private" if you are reporting a security issue.</p>
             </div>
             <div class="buttonBar">
                 <span class="spacer"></span>
-                <a href="#" class="button" onclick="$('#newBugSettings').removeClass('show');">Done</a>
+                <a href="#" class="button" onclick="$('#newBugSettings').removeClass('show');" data-i18n="done">Done</a>
             </div>
         </div>
 
@@ -193,43 +207,43 @@
 
         <div class="dialog" id="dlgLoadFail">
             <img src="/images/dialog-warning.svg" class="icon" />
-            <h1>Load Error</h1>
-            <p>Loading the Bug Reporting tool failed. This might be because of a server error, or it may be because of an unstable internet connection.</p>
+            <h1 data-i18n="load-error">Load Error</h1>
+            <p data-i18n="load-error-description">Loading the Bug Reporting tool failed. This might be because of a server error, or it may be because of an unstable internet connection.</p>
             <div class="buttonBar">
                 <a href="#" class="button" onclick="location.reload();">Reload</a>
             </div>
         </div>
         <div class="dialog" id="dlgConnectFail">
             <img src="/images/dialog-warning.svg" class="icon" />
-            <h1>Connection Error</h1>
-            <p>Couldn't connect to the server.</p>
+            <h1 data-i18n="connection-error">Connection Error</h1>
+            <p data-i18n="connection-error-description">Couldn't connect to the server.</p>
             <div class="buttonBar">
                 <a href="#" class="button" onclick="location.reload();">Reload</a>
             </div>
         </div>
         <div class="dialog" id="dlgOffline">
             <img src="/images/dialog-warning.svg" class="icon" />
-            <h1>Offline</h1>
-            <p>You are offline. To continue using the bugtracker, connect to the internet.</p>
+            <h1 data-i18n="offline">Offline</h1>
+            <p data-i18n="offline-description">You are offline. To continue using the bugtracker, connect to the internet.</p>
             <div class="buttonBar">
                 <a href="#" class="button" onclick="location.reload();">Reload</a>
             </div>
         </div>
         <div class="dialog" id="dlgDisconnected">
             <img src="/images/dialog-warning.svg" class="icon" />
-            <h1>Disconnected</h1>
-            <p>You have been disconnected from the server.</p>
+            <h1 data-i18n="disconnected">Disconnected</h1>
+            <p data-i18n="disconnected-description">You have been disconnected from the server.</p>
             <div class="buttonBar">
                 <a href="#" class="button" onclick="location.reload();">Reload</a>
             </div>
         </div>
         <div class="dialog" id="dlgLoginRequired">
             <img src="/images/dialog-warning.svg" class="icon" />
-            <h1>Log In</h1>
-            <p>You'll need to log in to perform this action.</p>
+            <h1 data-i18n="log-in">Log In</h1>
+            <p data-i18n="log-in-required-description">You'll need to log in to perform this action.</p>
             <div class="buttonBar">
-                <a href="#" class="button" onclick="login();">Log In</a>
-                <a href="#" class="button" onclick="dismissDialog('dlgLoginRequired');">Cancel</a>
+                <a href="#" class="button" onclick="login();" data-i18n="log-in">Log In</a>
+                <a href="#" class="button" onclick="dismissDialog('dlgLoginRequired');" data-i18n="cancel">Cancel</a>
             </div>
         </div>
         <div class="dialog" id="dlgGenericOkWarning">
@@ -245,27 +259,27 @@
         </div>
         <div class="dialog noicon" id="dlgEdit">
             <div id="dlgEditWrapper">
-                <h1>Edit Comment</h1>
-                <p>How would you like to amend your comment?</p>
+                <h1 data-i18n="edit-comment">Edit Comment</h1>
+                <p data-i18n="edit-comment-description">How would you like to amend your comment?</p>
                 <textarea id="editCommentText" placeholder="Write a comment..." style="width: 100%;"></textarea>
                 <div class="buttonBar" style="margin-top: 6px;">
-                    <a href="#" class="button" onclick="editCommentCommit()">Edit</a>
+                    <a href="#" class="button" onclick="editCommentCommit()" data-i18n="edit">Edit</a>
                     <span class="spacer"></span>
-                    <a href="#" class="button" onclick="dismissDialog('dlgEdit');">Cancel</a>
+                    <a href="#" class="button" onclick="dismissDialog('dlgEdit');" data-i18n="cancel">Cancel</a>
                 </div>
             </div>
         </div>
         <div class="dialog noicon" id="dlgUserManagement">
-            <h1>User Management</h1>
-            <p>Hello <span id="userManagementUsername"></span>! What would you like to do today?</p>
+            <h1 data-i18n="user-management">User Management</h1>
+            <p id="userManagementUsername">Hello $1! What would you like to do today?</p>
             <span class="spacer"></span>
-            <a href="#" class="button" onclick="dismissDialog('dlgUserManagement'); showDialog('dlgProfileSettings')">Profile and Account</a>
-            <a href="#" class="button" onclick="dismissDialog('dlgUserManagement'); showDialog('dlg2fa')">Two Factor Authentication</a>
-            <a href="#" class="button destructive" onclick="dismissDialog('dlgUserManagement'); $('#deleteAccountError').removeClass('show'); showDialog('dlgDeleteAccount')">Delete my Account</a>
+            <a href="#" class="button" onclick="dismissDialog('dlgUserManagement'); showDialog('dlgProfileSettings')" data-i18n="profile-and-account">Profile and Account</a>
+            <a href="#" class="button" onclick="dismissDialog('dlgUserManagement'); showDialog('dlg2fa')" data-i18n="2fa">Two Factor Authentication</a>
+            <a href="#" class="button destructive" onclick="dismissDialog('dlgUserManagement'); $('#deleteAccountError').removeClass('show'); showDialog('dlgDeleteAccount')" data-i18n="delete-my-account">Delete my Account</a>
             <div class="buttonBar" style="margin-top: 6px;">
-                <a href="#" class="button" onclick="dismissDialog('dlgUserManagement');">Done</a>
+                <a href="#" class="button" onclick="dismissDialog('dlgUserManagement');" data-i18n="done">Done</a>
                 <span class="spacer"></span>
-                <a href="#" class="button" onclick="dismissDialog('dlgUserManagement'); showDialog('dlgLogout')">Log Out</a>
+                <a href="#" class="button" onclick="dismissDialog('dlgUserManagement'); showDialog('dlgLogout')" data-i18n="log-out">Log Out</a>
             </div>
         </div>
         <div class="dialog" id="dlgProfileSettings">
@@ -273,30 +287,30 @@
         </div>
         <div class="dialog" id="dlgLogout">
             <img src="/images/dialog-warning.svg" class="icon" />
-            <h1>Log Out</h1>
-            <p>Do you want to log out of your account?</p>
+            <h1 data-i18n="log-out">Log Out</h1>
+            <p data-i18n="log-out-confirmation">Do you want to log out of your account?</p>
             <div class="buttonBar">
-                <a href="#" class="button" onclick="logout();">Log Out</a>
-                <a href="#" class="button" onclick="dismissDialog('dlgLogout');showDialog('dlgUserManagement');">Cancel</a>
+                <a href="#" class="button" onclick="logout();" data-i18n="log-out">Log Out</a>
+                <a href="#" class="button" onclick="dismissDialog('dlgLogout');showDialog('dlgUserManagement');" data-i18n="cancel">Cancel</a>
             </div>
         </div>
         <div class="dialog noicon" id="dlgDeleteAccount">
-            <h1>Delete Account</h1>
-            <p>Here's what's going to happen</p>
+            <h1 data-i18n="delete-account">Delete Account</h1>
+            <p data-i18n="delete-account-intro">Here's what's going to happen</p>
             <ul>
-                <li>You will no longer be able to log in</li>
-                <li>You will no longer be able to file new tickets</li>
-                <li>You will no longer be able to participate in comments</li>
-                <li>Your current username and email address will be available for use by new accounts</li>
-                <li>Your comments and existing tickets will not be deleted</li>
+                <li data-i18n="delete-account-1">You will no longer be able to log in</li>
+                <li data-i18n="delete-account-2">You will no longer be able to file new tickets</li>
+                <li data-i18n="delete-account-3">You will no longer be able to participate in comments</li>
+                <li data-i18n="delete-account-4">Your current username and email address will be available for use by new accounts</li>
+                <li data-i18n="delete-account-5">Your comments and existing tickets will not be deleted</li>
             </ul>
-            <p>If you're sure you want to delete your account, enter your password below to confirm that it's you.</p>
+            <p data-i18n="delete-account-confirmation">If you're sure you want to delete your account, enter your password below to confirm that it's you.</p>
             <input type="password" id="deleteAccountPassword" autocomplete="new-password" style="width: 100%;"/>
-            <span class="error" id="deleteAccountError">That didn't work. Try entering your password again.</span>
-            <p style="font-weight: bold;">WARNING: This is the final step. Your account will be deleted after you click "Delete my account."</p>
+            <span class="error" id="deleteAccountError" data-i18n="delete-account-error">That didn't work. Try entering your password again.</span>
+            <p style="font-weight: bold;" data-i18n="delete-account-warning">WARNING: This is the final step. Your account will be deleted after you click "Delete my account."</p>
             <div class="buttonBar">
-                <a href="#" class="button destructive" onclick="deleteAccount();">Delete my account</a>
-                <a href="#" class="button" onclick="dismissDialog('dlgDeleteAccount');showDialog('dlgUserManagement');">Cancel</a>
+                <a href="#" class="button destructive" onclick="deleteAccount();" data-i18n="delete-my-account">Delete my account</a>
+                <a href="#" class="button" onclick="dismissDialog('dlgDeleteAccount');showDialog('dlgUserManagement');" data-i18n="cancel">Cancel</a>
             </div>
         </div>
         <div class="dialog" id="dlg2fa">
@@ -304,29 +318,41 @@
         </div>
         <div class="dialog" id="dlgLink">
             <img src="/images/dialog-warning.svg" class="icon" />
-            <h1>Obfuscated Link</h1>
-            <p>Links from other people can be dangerous. The link you clicked on will go to the following address:</p>
+            <h1 data-i18n="obfuscated-link">Obfuscated Link</h1>
+            <p data-i18n="obfuscated-link-description">Links from other people can be dangerous. The link you clicked on will go to the following address:</p>
             <pre id="linkDialogLink"></pre>
-            <p>Do you want to visit this site?</p>
+            <p data-i18n="obfuscated-link-confirmation">Do you want to visit this site?</p>
             <div class="buttonBar">
-                <a href="#" class="button" onclick="visitObfuscatedLink()">Visit</a>
-                <a href="#" class="button" onclick="dismissDialog('dlgLink');">Cancel</a>
+                <a href="#" class="button" onclick="visitObfuscatedLink()" data-i18n="visit">Visit</a>
+                <a href="#" class="button" onclick="dismissDialog('dlgLink');" data-i18n="cancel">Cancel</a>
             </div>
         </div>
         <div class="dialog" id="dlgRatelimit">
             <img src="/images/dialog-warning.svg" class="icon" />
-            <h1>You are being rate limited</h1>
-            <p>Your rate limit resets on <span id="ratelimitReset"></span>.</p>
-            <p>Reload the page after that time to continue using the bugtracker.</p>
+            <h1 data-i18n="rate-limited">You are being rate limited</h1>
+            <p id="ratelimitReset">Your rate limit resets on $1.</p>
+            <p data-i18n="rate-limited-description">Reload the page after that time to continue using the bugtracker.</p>
         </div>
         <div class="dialog" id="dlgVerificationNeeded">
             <img src="/images/dialog-warning.svg" class="icon" />
-            <h1>Your email needs to be verified.</h1>
-            <p>You won't be able to receive any emails from the bug tracker while your email is not verified.</p>
-            <p>To verify your email, find the verification link in your inbox. If you can't find it, you may want to check your spam folder.</p>
-            <p>If you need the link resent, please send an email to <a href="mailto:hello@vicr123.com">hello@vicr123.com</a>.</p>
+            <h1 data-i18n="verification-needed">Your email needs to be verified.</h1>
+            <p data-i18n="verification-needed-1">You won't be able to receive any emails from the bug tracker while your email is not verified.</p>
+            <p data-i18n="verification-needed-2">To verify your email, find the verification link in your inbox. If you can't find it, you may want to check your spam folder.</p>
+            <p id=verificationNeededEmail>If you need the link resent, please send an email to <a href="mailto:hello@vicr123.com">hello@vicr123.com</a>.</p>
             <div class="buttonBar">
-                <a href="#" class="button" onclick="dismissDialog('dlgVerificationNeeded');">OK</a>
+                <a href="#" class="button" onclick="dismissDialog('dlgVerificationNeeded');" data-i18n="ok">OK</a>
+            </div>
+        </div>
+        <div class="dialog noicon" id="dlgSettings">
+            <h1 data-i18n="settings">Settings</h1>
+            <p data-i18n="settings-intro">Configure the bugtracker</p>
+            <h3 data-i18n="settings-language">Language</h3>
+            <select id="languageSelect">
+                <option value="en">English</option>
+                <option value="vi">Tiếng Việt</option>
+            </select>
+            <div class="buttonBar">
+                <a href="#" class="button" onclick="dismissDialog('dlgSettings');" data-i18n="done">Done</a>
             </div>
         </div>
         

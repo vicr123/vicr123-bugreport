@@ -2,6 +2,7 @@ var img1 = new Image();
 img1.src = "/images/loader.svg";
 
 $(function() {
+    $("body").i18n();
     $("#login").show();
     $("#register").hide();
     $("#2fa").hide();
@@ -30,6 +31,16 @@ $(function() {
         return true;
     });
 });
+
+function retranslatePage() {
+    $("#username").attr("placeholder", $.i18n("username"));
+    $("#password").attr("placeholder", $.i18n("password"));
+    $("#regemail").attr("placeholder", $.i18n("email"));
+    $("#regusername").attr("placeholder", $.i18n("username"));
+    $("#regpassword").attr("placeholder", $.i18n("password"));
+    $("#regpasswordconfirm").attr("placeholder", $.i18n("confirm-password"));
+    $("#totpCode").attr("placeholder", $.i18n("2fa-code"));
+}
 
 function attemptLogin() {
     $("#coverLoader").addClass("show");
